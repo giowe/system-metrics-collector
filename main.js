@@ -3,28 +3,119 @@
 const AWS = require('aws-sdk');
 const { argv } = require('yargs');
 const exec = require('exec');
-const sys = require('systeminformation');
+const si = require('systeminformation');
+const fs = require('fs');
 
 const config = {
-
+  /*aws: {
+    accessKeyId: null,
+    secretAccessKey: null,
+    region: null
+  }*/
 };
+
 try {
   Object.assign(config, require('~/.sfcwrc'));
 } catch(ignore) {}
 
+const promises = [
+  new Promise((resolve, reject) => {
+    if(config.id) return resolve(config.id);
+    si.system((data) => {
+      resolve(data);
+    });
+  }),
+  new Promise((resolve, reject) => {
+    fs.readFile('/proc/meminfo', 'UTF-8', (err, data) => {
+      console.log(data);
+      if(err) return reject(err);
+      resolve(data);
+    });
+  }),
+  new Promise((resolve, reject) => {
+    fs.readFile('/proc/stat', 'UTF-8', (err, data) => {
+      if(err) return reject(err);
+      resolve(data);
+    });
+  })
+];
 
-const out = {
-  id: argv.id || config.id, //todo aggiungi caricato da file di ubuntu,
-  cpu: null,
-  memory: null,
-  disk: null,
-  network: null
-};
+Promise.all(promises).then(values => {
+  const ram = values[1].replace(/ /g, '').split(/\r|\n/);
+  const cpu = values[2].split(/\r|\n/);
 
-const s3 = new AWS.S3(); //todo passare parametri se esistono
-s3.upload({
-  Bucket: 'bucket',
-  Key: `${out.id}_millisec in unix time`,
-  ContentType: 'application/json',
-  Body: JSON.stringify(out)
+  const cpuResult = {
+    avg: null,
+    cpus: []
+  };
+
+  for (let index = 0; index < cpu.length; ++index) {
+    const line = cpu[index];
+    if(!line.startsWith('cpu')) break;
+    const splittedLine = line.replace(/ {2}/g, ' ').split(/ /g);
+
+    /*
+     *
+     user: normal processes executing in user mode
+     nice: niced processes executing in user mode
+     system: processes executing in kernel mode
+     idle: twiddling thumbs
+     iowait: waiting for I/O to complete
+     irq: servicing interrupts
+     softirq: servicing softirqs
+     * */
+
+    const result = {
+      cpuName: splittedLine[0],
+      user: splittedLine[1],
+      nice: splittedLine[2],
+      system: splittedLine[3],
+      idle: splittedLine[4],
+      iowait: splittedLine[5],
+      irq: splittedLine[6],
+      softirq: splittedLine[7]
+    };
+
+    if(index === 0) {
+      cpuResult.avg = result;
+    } else {
+      cpuResult.cpus[index - 1] = result;
+    }
+  }
+
+  const out = {
+    id: argv.id || config.id || values[0], //todo aggiungi caricato da file di ubuntu,
+    cpu: cpuResult,
+    memory: {
+      MemTotal: ram[0].substring(9, ram[0].length-2),
+      MemFree: ram[1].substring(8, ram[1].length-2),
+      MemAvailable: ram[2].substring(13, ram[2].length-2)
+    },
+    disk: null,
+    network: null
+  };
+
+  /*const s3 = initliazeS3(config, argv);
+
+  s3.upload({
+    Bucket: 'bucket',
+    Key: `${out.id}_${time}`,
+    ContentType: 'application/json',
+    Body: JSON.stringify(out)
+  });*/
 });
+
+
+function initliazeS3(config, argv) {
+  if(config.aws) {
+    return new AWS.S3(config.aws);
+  } else if(argv.accessKeyId) {
+    return new AWS.S3({
+      accessKeyId: argv.accessKeyId,
+      secretAccessKey: argv.secretAccessKey,
+      region: argv.region
+    });
+  } else {
+    return new AWS.S3();
+  }
+}
