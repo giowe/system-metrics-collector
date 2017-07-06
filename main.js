@@ -4,7 +4,10 @@ const AWS = require('aws-sdk');
 const { argv } = require('yargs');
 const exec = require('exec');
 const si = require('systeminformation');
-const fs = require('fs');
+const readFile = require('readFileT');
+const accessKeyId = null;
+const secretAccessKey = null;
+const region = null;
 
 const config = {
   /*aws: {
@@ -26,14 +29,14 @@ const promises = [
     });
   }),
   new Promise((resolve, reject) => {
-    fs.readFile('/proc/meminfo', 'UTF-8', (err, data) => {
+    readFile('/proc/meminfo', 'UTF-8', (err, data) => {
       console.log(data);
       if(err) return reject(err);
       resolve(data);
     });
   }),
   new Promise((resolve, reject) => {
-    fs.readFile('/proc/stat', 'UTF-8', (err, data) => {
+    readFile('/proc/stat', 'UTF-8', (err, data) => {
       if(err) return reject(err);
       resolve(data);
     });
@@ -45,6 +48,7 @@ Promise.all(promises).then(values => {
   const cpu = values[2].split(/\r|\n/);
 
   const cpuResult = {
+    time: values[2],
     avg: null,
     cpus: []
   };
@@ -95,7 +99,9 @@ Promise.all(promises).then(values => {
     network: null
   };
 
-  /*const s3 = initliazeS3(config, argv);
+  console.log(out);
+
+  /*const s3 = initializeS3(config, argv);
 
   s3.upload({
     Bucket: 'bucket',
@@ -106,14 +112,14 @@ Promise.all(promises).then(values => {
 });
 
 
-function initliazeS3(config, argv) {
+function initializeS3(config, argv) {
   if(config.aws) {
     return new AWS.S3(config.aws);
-  } else if(argv.accessKeyId) {
+  } else if(accessKeyId) {
     return new AWS.S3({
-      accessKeyId: argv.accessKeyId,
-      secretAccessKey: argv.secretAccessKey,
-      region: argv.region
+      accessKeyId,
+      secretAccessKey,
+      region
     });
   } else {
     return new AWS.S3();
