@@ -4,7 +4,7 @@ const AWS = require('aws-sdk');
 const { argv } = require('yargs');
 const exec = require('exec');
 const si = require('systeminformation');
-const readFile = require('readFileT');
+const readFile = require('./readFileT.js');
 const accessKeyId = null;
 const secretAccessKey = null;
 const region = null;
@@ -44,11 +44,11 @@ const promises = [
 ];
 
 Promise.all(promises).then(values => {
-  const ram = values[1].replace(/ /g, '').split(/\r|\n/);
-  const cpu = values[2].split(/\r|\n/);
+  const ram = values[1].data.replace(/ /g, '').split(/\r|\n/);
+  const cpu = values[2].data.split(/\r|\n/);
 
   const cpuResult = {
-    time: values[2],
+    time: values[2].time,
     avg: null,
     cpus: []
   };
