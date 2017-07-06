@@ -10,6 +10,8 @@ const secretAccessKey = null;
 const region = null;
 
 const config = {
+  id: null,
+  clientId: null
   /*aws: {
     accessKeyId: null,
     secretAccessKey: null,
@@ -23,9 +25,10 @@ try {
 
 const promises = [
   new Promise(resolve => {
-    if(config.id) return resolve(config.id);
-    si.system((data) => {
-      resolve(data);
+    si.networkInterfaceDefault(iface => {
+      si.networkStats(iface, (data) => {
+        resolve(data);
+      });
     });
   }),
   new Promise((resolve, reject) => {
@@ -89,7 +92,7 @@ Promise.all(promises).then(values => {
   });
 
   const out = {
-    id: argv.id || config.id || values[0], //todo aggiungi caricato da file di ubuntu,
+    id: argv.id || config.id || 'please set an id', //todo aggiungi caricato da file di ubuntu,
     cpu: cpuResult,
     memory: {
       time: values[1].time,
@@ -98,13 +101,12 @@ Promise.all(promises).then(values => {
       MemAvailable: ram[2].substring(13, ram[2].length-2)
     },
     disk: diskResult,
-    network: null
+    network: values[0]
   };
 
-  console.log(JSON.stringify(out));
+  //console.log(JSON.stringify(out));
 
   /*const s3 = _initializeS3(config, argv);
-
   s3.upload({
     Bucket: 'bucket',
     Key: `${out.id}_${time}`,
