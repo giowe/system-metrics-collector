@@ -30,7 +30,6 @@ const promises = [
   }),
   new Promise((resolve, reject) => {
     readFile('/proc/meminfo', 'UTF-8', (err, data) => {
-      console.log(data);
       if(err) return reject(err);
       resolve(data);
     });
@@ -40,12 +39,12 @@ const promises = [
       if(err) return reject(err);
       resolve(data);
     });
-  })
-  ,
+  }),
   new Promise((resolve, reject) => {
-    readFile('/proc/stat', 'UTF-8', (err, data) => {
+    exec(['/bin/df', '-k', '-l', '-P'], (err, out, code) => {
       if(err) return reject(err);
-      resolve(data);
+      console.log(out);
+      resolve(out, code);
     });
   })
 ];
@@ -53,6 +52,7 @@ const promises = [
 Promise.all(promises).then(values => {
   const ram = values[1].data.replace(/ /g, '').split(/\r|\n/);
   const cpu = values[2].data.split(/\r|\n/);
+  const disk = values[3].split(/\r|\n/);
 
   const cpuResult = {
     time: values[2].time,
@@ -97,15 +97,31 @@ Promise.all(promises).then(values => {
     }
   }
 
+  const diskResult = [];
+
+  for(let index = 1; index < disk.length; ++index) {
+    const line = disk[index].split(/\s+/);
+    if(line.length < 6) {
+      continue;
+    }
+    diskResult[index - 1] = {
+      name: line[0],
+      capacity: line[5],
+      used: line[2],
+      available: line[3]
+    };
+  }
+
   const out = {
     id: argv.id || config.id || values[0], //todo aggiungi caricato da file di ubuntu,
     cpu: cpuResult,
     memory: {
+      time: values[1].time,
       MemTotal: ram[0].substring(9, ram[0].length-2),
       MemFree: ram[1].substring(8, ram[1].length-2),
       MemAvailable: ram[2].substring(13, ram[2].length-2)
     },
-    disk: null,
+    disk: diskResult,
     network: null
   };
 
