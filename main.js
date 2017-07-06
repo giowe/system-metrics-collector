@@ -41,6 +41,13 @@ const promises = [
       resolve(data);
     });
   })
+  ,
+  new Promise((resolve, reject) => {
+    readFile('/proc/stat', 'UTF-8', (err, data) => {
+      if(err) return reject(err);
+      resolve(data);
+    });
+  })
 ];
 
 Promise.all(promises).then(values => {
@@ -77,7 +84,10 @@ Promise.all(promises).then(values => {
       idle: splittedLine[4],
       iowait: splittedLine[5],
       irq: splittedLine[6],
-      softirq: splittedLine[7]
+      softirq: splittedLine[7],
+      steal: splittedLine[8],
+      guest: splittedLine[9],
+      guest_nice: splittedLine[10]
     };
 
     if(index === 0) {
@@ -99,7 +109,7 @@ Promise.all(promises).then(values => {
     network: null
   };
 
-  console.log(out);
+  console.log(JSON.stringify(out));
 
   /*const s3 = initializeS3(config, argv);
 
@@ -114,13 +124,13 @@ Promise.all(promises).then(values => {
 
 function initializeS3(config, argv) {
   if(config.aws) {
-    return new AWS.S3(config.aws);
+    return new AWS.S3(new AWS.config(config.aws));
   } else if(accessKeyId) {
-    return new AWS.S3({
+    return new AWS.S3(new AWS.config({
       accessKeyId,
       secretAccessKey,
       region
-    });
+    }));
   } else {
     return new AWS.S3();
   }
