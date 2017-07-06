@@ -22,7 +22,12 @@
   "bugs": {
     "url": "https://github.com/giowe/cloudwatch-client/issues"
   },
-  "dependencies": {},
+  "dependencies": {
+    "aws-sdk": "^2.81.0",
+    "exec": "^0.2.1",
+    "systeminformation": "^3.23.5",
+    "yargs": "^8.0.2"
+  },
   "devDependencies": {
     "eslint": "^4.1.1"
   }
