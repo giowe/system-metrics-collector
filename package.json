@@ -1,0 +1,26 @@
+{
+  "name": "cloudwatch-client",
+  "version": "0.0.0",
+  "description": "Upload Linux system metrics from any machine to AWS CloudWatch",
+  "main": "./main.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/giowe/cloudwatch-client.git"
+  },
+  "author": "Giovanni Bruno",
+  "contributors": [
+    {
+      "name": "Giovanni Bruno",
+      "email": "giovanni.bruno@soluzionifutura.it",
+      "url": "www.soluzionifutura.it"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/giowe/cloudwatch-client/issues"
+  },
+  "dependencies": { },
+  "devDependencies": {
+    "eslint": "^4.1.1"
+  }
+}
