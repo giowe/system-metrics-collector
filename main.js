@@ -2,7 +2,7 @@
 
 const AWS = require('aws-sdk');
 const { argv } = require('yargs');
-const exec = require('exec');
+const { exec } = require('child_process');
 const si = require('systeminformation');
 const readFile = require('./readFileT.js');
 const accessKeyId = null;
@@ -44,9 +44,8 @@ const promises = [
     });
   }),
   new Promise((resolve, reject) => {
-    exec(['/bin/df', '-k', '-l', '-P'], (err, out, code) => {
+    exec('/bin/df -k -l -P', (err, out, code) => {
       if(err) return reject(err);
-      console.log(out);
       resolve(out, code);
     });
   })
@@ -130,14 +129,14 @@ Promise.all(promises).then(values => {
 
   //console.log(JSON.stringify(out));
 
-  const s3 = initializeS3(config, argv);
+  /*const s3 = initializeS3(config, argv);
 
   s3.upload({
     Bucket: 'bucket',
     Key: `${out.id}_${time}`,
     ContentType: 'application/json',
     Body: JSON.stringify(out)
-  });
+  });*/
 });
 
 
