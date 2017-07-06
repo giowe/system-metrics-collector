@@ -1,6 +1,8 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const fs = require('fs');
+const path = require('path');
 const { argv } = require('yargs');
 const { exec } = require('child_process');
 const si = require('systeminformation');
@@ -10,9 +12,10 @@ const secretAccessKey = null;
 const region = null;
 
 const config = {
-  id: null,
-  clientId: null
-  /*aws: {
+  /*id: null,
+  customerId: null,
+  bucket: null,
+  aws: {
     accessKeyId: null,
     secretAccessKey: null,
     region: null
@@ -20,15 +23,25 @@ const config = {
 };
 
 try {
-  Object.assign(config, require('~/.sfcwrc'));
-} catch(ignore) {}
+  Object.assign(config, JSON.parse(fs.readFileSync(path.join(process.env.HOME, '.sfcwrc'), 'UTF-8')));
+} catch(ignore) {
+  console.log(`Can't find config file at ${path.join(process.env.HOME, '.sfcwrc')}`);
+}
+
+if(argv.customerId) config.customerId = argv.customerId;
+if(argv.id) config.id = argv.id;
+if(argv.bucket) config.bucket = argv.bucket;
 
 const promises = [
-  new Promise((resolve, reject) => {
-    si.networkInterfaceDefault(iface => {
-      si.networkStats(iface, (data) => {
-        resolve(data);
+  new Promise(resolve => {
+    si.networkInterfaces(ifaces => {
+      const result = [];
+      ifaces.forEach(iface => {
+        si.networkStats(iface, (data) => {
+          result.push(data);
+        });
       });
+      resolve(result);
     });
   }),
   new Promise((resolve, reject) => {
@@ -55,6 +68,7 @@ Promise.all(promises).then(values => {
   const ram = values[1].data.replace(/ /g, '').split(/\r|\n/);
   const cpu = values[2].data.split(/\r|\n/);
   const disk = values[3].split(/\r|\n/);
+  const time = Date.now().valueOf();
 
   const cpuResult = {
     time: values[2].time,
@@ -62,57 +76,34 @@ Promise.all(promises).then(values => {
     cpus: []
   };
 
-  for (let index = 0; index < cpu.length; ++index) {
-    const line = cpu[index];
-    if(!line.startsWith('cpu')) break;
-    const splittedLine = line.replace(/ {2}/g, ' ').split(/ /g);
-
-    /*
-     *
-     user: normal processes executing in user mode
-     nice: niced processes executing in user mode
-     system: processes executing in kernel mode
-     idle: twiddling thumbs
-     iowait: waiting for I/O to complete
-     irq: servicing interrupts
-     softirq: servicing softirqs
-     * */
-
-    const result = {
-      cpuName: splittedLine[0],
-      user: splittedLine[1],
-      nice: splittedLine[2],
-      system: splittedLine[3],
-      idle: splittedLine[4],
-      iowait: splittedLine[5],
-      irq: splittedLine[6],
-      softirq: splittedLine[7],
-      steal: splittedLine[8],
-      guest: splittedLine[9],
-      guest_nice: splittedLine[10]
-    };
+  cpu.some((line, index) => {
+    if(!line.startsWith('cpu')) return true;
+    const [cpuName, user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice] = line.replace(/\s+/, ' ').split(/ /g);
+    const result = { cpuName, user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice };
 
     if(index === 0) {
       cpuResult.avg = result;
     } else {
-      cpuResult.cpus[index - 1] = result;
+      cpuResult.cpus.push(result);
     }
-  }
+  });
 
   const diskResult = [];
 
-  for(let index = 1; index < disk.length; ++index) {
-    const line = disk[index].split(/\s+/);
-    if(line.length < 6) {
-      continue;
-    }
-    diskResult[index - 1] = {
+  disk.forEach((line, index) => {
+    if (index === 0) return;
+    line = line.split(/\s+/);
+    if(line.length < 6) return;
+
+    diskResult.push({
       name: line[0],
-      capacity: line[5],
+      mountPoint: line[5],
+      capacity: line[4],
       used: line[2],
       available: line[3]
-    };
-  }
+    });
+
+  });
 
   const out = {
     id: argv.id || config.id || 'please set an id', //todo aggiungi caricato da file di ubuntu,
@@ -127,28 +118,28 @@ Promise.all(promises).then(values => {
     network: values[0]
   };
 
-  //console.log(JSON.stringify(out));
-
-  /*const s3 = initializeS3(config, argv);
-
+  const s3 = _initializeS3(config, argv);
   s3.upload({
-    Bucket: 'bucket',
-    Key: `${out.id}_${time}`,
+    Bucket: config.bucket,
+    Key: `${config.customerId}/${out.id}/${config.customerId}_${out.id}_${time}`,
     ContentType: 'application/json',
     Body: JSON.stringify(out)
-  });*/
+  }, (err, result) => {
+    if(err) return console.log(err);
+    console.log(result);
+  });
 });
 
 
-function initializeS3(config, argv) {
+function _initializeS3(config, argv) {
   if(config.aws) {
-    return new AWS.S3(new AWS.config(config.aws));
+    return new AWS.S3(config.aws);
   } else if(accessKeyId) {
-    return new AWS.S3(new AWS.config({
+    return new AWS.S3({
       accessKeyId,
       secretAccessKey,
       region
-    }));
+    });
   } else {
     return new AWS.S3();
   }
