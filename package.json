@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Upload Linux system metrics from any machine to AWS CloudWatch",
   "main": "./main.js",
+  "bin": {
+    "sfcw": "./bin/sfcw"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/giowe/cloudwatch-client.git"
@@ -19,7 +22,7 @@
   "bugs": {
     "url": "https://github.com/giowe/cloudwatch-client/issues"
   },
-  "dependencies": { },
+  "dependencies": {},
   "devDependencies": {
     "eslint": "^4.1.1"
   }
