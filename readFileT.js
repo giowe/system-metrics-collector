@@ -10,6 +10,5 @@ module.exports = new Proxy(readFile, {
         data
       });
     });
-    return Date.now();
   }
 });
