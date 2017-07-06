@@ -10,13 +10,13 @@ const readFile = require('./readFileT.js');
 
 const config = {
   /*id: null,
-  customerId: null,
-  bucket: null,
-  aws: {
-    accessKeyId: null,
-    secretAccessKey: null,
-    region: null
-  }*/
+   customerId: null,
+   bucket: null,
+   aws: {
+   accessKeyId: null,
+   secretAccessKey: null,
+   region: null
+   }*/
 };
 
 try {
@@ -135,3 +135,26 @@ function _initializeS3(config, argv) {
     return new AWS.S3();
   }
 }
+
+function _findValue(text, key, separator) {
+  return _rec_findValue(text, key, separator, new RegExp(key));
+}
+
+function _rec_findValue(text, key, separator, reg, results = []) {
+  let startIndex = text.search(reg);
+  if(startIndex === -1) return results;
+  startIndex += key.length;
+  let index = startIndex;
+
+  while(text.length > index && text[index] !== '\n') {
+    if(text[index] === separator){
+      startIndex = index + 1;
+    }
+    index++;
+  }
+
+  results.push(text.substring(startIndex, index));
+
+  return _rec_findValue(text.substring(index + 1), key, separator, reg, results);
+}
+
