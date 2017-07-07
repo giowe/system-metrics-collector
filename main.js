@@ -5,18 +5,20 @@ const fs = require('fs');
 const path = require('path');
 const { argv } = require('yargs');
 const { exec } = require('child_process');
-const si = require('systeminformation');
 const readFile = require('./readFileT.js');
+const accessKeyId = null;
+const secretAccessKey = null;
+const region = null;
 
 const config = {
   /*id: null,
-   customerId: null,
-   bucket: null,
-   aws: {
-   accessKeyId: null,
-   secretAccessKey: null,
-   region: null
-   }*/
+  customerId: null,
+  bucket: null,
+  aws: {
+    accessKeyId: null,
+    secretAccessKey: null,
+    region: null
+  }*/
 };
 
 try {
@@ -30,15 +32,10 @@ if(argv.id) config.id = argv.id;
 if(argv.bucket) config.bucket = argv.bucket;
 
 const promises = [
-  new Promise(resolve => {
-    si.networkInterfaces(ifaces => {
-      const result = [];
-      ifaces.forEach(iface => {
-        si.networkStats(iface, (data) => {
-          result.push(data);
-        });
-      });
-      resolve(result);
+  new Promise((resolve, reject) => {
+    readFile('/proc/net/dev', 'UTF-8', (err, data) => {
+      if(err) return reject(err);
+      resolve(data);
     });
   }),
   new Promise((resolve, reject) => {
@@ -58,6 +55,12 @@ const promises = [
       if(err) return reject(err);
       resolve(out, code);
     });
+  }),
+  new Promise((resolve, reject) => {
+    readFile('/proc/cpuinfo', 'UTF-8', (err, data) => {
+      if(err) return reject(err);
+      resolve(data);
+    });
   })
 ];
 
@@ -66,12 +69,23 @@ Promise.all(promises).then(values => {
   const cpu = values[2].data.split(/\r|\n/);
   const disk = values[3].split(/\r|\n/);
   const time = Date.now().valueOf();
+  const cpuInfo = values[4].data;
+  const net = values[0].data.split(/\r|\n/);
 
   const cpuResult = {
     time: values[2].time,
-    avg: null,
+    total: null,
     cpus: []
   };
+
+  const cores = cpuInfo.length - 1;
+  cpuResult.info = {
+    cores,
+    speed: []
+  };
+
+  cpuResult.info.speed = _findValue(cpuInfo, 'cpu MHz', ':');
+  cpuResult.info.cores = cpuResult.info.speed.length;
 
   cpu.some((line, index) => {
     if(!line.startsWith('cpu')) return true;
@@ -79,7 +93,7 @@ Promise.all(promises).then(values => {
     const result = { cpuName, user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice };
 
     if(index === 0) {
-      cpuResult.avg = result;
+      cpuResult.total = result;
     } else {
       cpuResult.cpus.push(result);
     }
@@ -102,8 +116,23 @@ Promise.all(promises).then(values => {
 
   });
 
+  const netResult = [];
+
+  net.forEach((line, index) => {
+    if(index < 2) return;
+    const split = line.split(/\s+/);
+    if(split.length < 11) return;
+    netResult.push({
+      name: split[0].substring(0, split[0].length-1),
+      bytes_in: split[1],
+      packets_in: split[2],
+      bytes_out: split[9],
+      packets_out: split[10]
+    });
+  });
+
   const out = {
-    id: argv.id || config.id || 'please set an id', //todo aggiungi caricato da file di ubuntu,
+    id: argv.id || config.id, //todo aggiungi caricato da file di ubuntu,
     cpu: cpuResult,
     memory: {
       time: values[1].time,
@@ -112,7 +141,7 @@ Promise.all(promises).then(values => {
       MemAvailable: ram[2].substring(13, ram[2].length-2)
     },
     disk: diskResult,
-    network: values[0]
+    network: netResult
   };
 
   const s3 = _initializeS3(config, argv);
@@ -131,16 +160,19 @@ Promise.all(promises).then(values => {
 function _initializeS3(config, argv) {
   if(config.aws) {
     return new AWS.S3(config.aws);
+  } else if(accessKeyId) {
+    return new AWS.S3({
+      accessKeyId,
+      secretAccessKey,
+      region
+    });
   } else {
     return new AWS.S3();
   }
 }
 
-function _findValue(text, key, separator) {
-  return _rec_findValue(text, key, separator, new RegExp(key));
-}
 
-function _rec_findValue(text, key, separator, reg, results = []) {
+function _findValue(text, key, separator, reg = new RegExp(key), results = []) {
   let startIndex = text.search(reg);
   if(startIndex === -1) return results;
   startIndex += key.length;
@@ -153,8 +185,7 @@ function _rec_findValue(text, key, separator, reg, results = []) {
     index++;
   }
 
-  results.push(text.substring(startIndex, index));
+  results.push(text.substring(startIndex, index).trim());
 
-  return _rec_findValue(text.substring(index + 1), key, separator, reg, results);
+  return _findValue(text.substring(index + 1), key, separator, reg, results);
 }
-
