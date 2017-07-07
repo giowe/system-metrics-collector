@@ -120,7 +120,7 @@ Promise.all(promises).then(values => {
 
   net.forEach((line, index) => {
     if(index < 2) return;
-    const split = line.split(/\s+/);
+    const split = line.trim().split(/\s+/);
     if(split.length < 11) return;
     netResult.push({
       name: split[0].substring(0, split[0].length-1),
