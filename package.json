@@ -35,19 +35,12 @@
   },
   "nexe": {
     "input": "main.js",
-    "output": "test",
+    "output": "out/sfwc",
     "browserify": {
       "excludes": [
         "spawn-sync"
       ],
       "requires": []
-    },
-    "runtime": {
-      "nodeConfigureOpts": [
-        "--fully-static"
-      ],
-      "framework": "nodejs",
-      "version": "6.11.0"
     }
   }
 }
