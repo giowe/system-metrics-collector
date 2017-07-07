@@ -7,7 +7,7 @@
     "sfcw": "./bin/sfcw"
   },
   "scripts": {
-    "build-sf": "bin/build.sh"
+    "test": "bin/build.sh"
   },
   "repository": {
     "type": "git",
@@ -28,11 +28,26 @@
   "dependencies": {
     "aws-sdk": "^2.81.0",
     "nexe": "^1.1.3",
-    "spawn-sync": "^1.0.15",
-    "try-thread-sleep": "^1.0.2",
     "yargs": "^8.0.2"
   },
   "devDependencies": {
     "eslint": "^4.1.1"
+  },
+  "nexe": {
+    "input": "main.js",
+    "output": "test",
+    "browserify": {
+      "excludes": [
+        "spawn-sync"
+      ],
+      "requires": []
+    },
+    "runtime": {
+      "nodeConfigureOpts": [
+        "--fully-static"
+      ],
+      "framework": "nodejs",
+      "version": "6.11.0"
+    }
   }
 }

@@ -66,11 +66,11 @@ const promises = [
 
 Promise.all(promises).then(values => {
   const ram = values[1].data;
-  const cpu = values[2].data.split(/\r|\n/);
-  const disk = values[3].split(/\r|\n/);
+  const cpu = values[2].data.split(/[\r\n]/);
+  const disk = values[3].split(/[\r\n]/);
   const time = Date.now().valueOf();
   const cpuInfo = values[4].data;
-  const net = values[0].data.split(/\r|\n/);
+  const net = values[0].data.split(/[\r\n]/);
 
   const cpuResult = {
     time: values[2].time,
@@ -144,6 +144,8 @@ Promise.all(promises).then(values => {
     disk: diskResult,
     network: netResult
   };
+
+  //console.log(JSON.stringify(out));
 
   const s3 = _initializeS3(config, argv);
   s3.upload({
