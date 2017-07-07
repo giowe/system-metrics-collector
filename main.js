@@ -65,7 +65,7 @@ const promises = [
 ];
 
 Promise.all(promises).then(values => {
-  const ram = values[1].data.replace(/ /g, '').split(/\r|\n/);
+  const ram = values[1].data;
   const cpu = values[2].data.split(/\r|\n/);
   const disk = values[3].split(/\r|\n/);
   const time = Date.now().valueOf();
@@ -84,7 +84,7 @@ Promise.all(promises).then(values => {
     speed: []
   };
 
-  cpuResult.info.speed = _findValue(cpuInfo, 'cpu MHz', ':');
+  cpuResult.info.speed = _findMultipleValuesFromText(cpuInfo, 'cpu MHz', ':');
   cpuResult.info.cores = cpuResult.info.speed.length;
 
   cpu.some((line, index) => {
@@ -133,12 +133,13 @@ Promise.all(promises).then(values => {
 
   const out = {
     id: argv.id || config.id, //todo aggiungi caricato da file di ubuntu,
+    time,
     cpu: cpuResult,
     memory: {
       time: values[1].time,
-      MemTotal: ram[0].substring(9, ram[0].length-2),
-      MemFree: ram[1].substring(8, ram[1].length-2),
-      MemAvailable: ram[2].substring(13, ram[2].length-2)
+      MemTotal: _findSingleValueFromText(ram, 'MemTotal', ':').slice(0, -2),
+      MemFree: _findSingleValueFromText(ram, 'MemFree', ':').slice(0, -2),
+      MemAvailable: _findSingleValueFromText(ram, 'MemAvailable', ':').slice(0, -2)
     },
     disk: diskResult,
     network: netResult
@@ -172,9 +173,11 @@ function _initializeS3(config, argv) {
 }
 
 
-function _findValue(text, key, separator, reg = new RegExp(key), results = []) {
+function _findValueIndexesFromText(text, key, separator, reg = new RegExp(key)) {
   let startIndex = text.search(reg);
-  if(startIndex === -1) return results;
+  if(startIndex === -1) {
+    return [-1, -1];
+  }
   startIndex += key.length;
   let index = startIndex;
 
@@ -185,7 +188,21 @@ function _findValue(text, key, separator, reg = new RegExp(key), results = []) {
     index++;
   }
 
+  return [startIndex, index];
+}
+
+function _findSingleValueFromText(text, key, separator) {
+  const [startIndex, index] = _findValueIndexesFromText(text, key, separator);
+  return text.substring(startIndex, index).trim();
+}
+
+function _findMultipleValuesFromText(text, key, separator, reg = new RegExp(key), results = []) {
+  const [startIndex, index] = _findValueIndexesFromText(text, key, separator, reg);
+  if(startIndex === -1) {
+    return results;
+  }
+
   results.push(text.substring(startIndex, index).trim());
 
-  return _findValue(text.substring(index + 1), key, separator, reg, results);
+  return _findMultipleValuesFromText(text.substring(index + 1), key, separator, reg, results);
 }
