@@ -35,12 +35,15 @@
   },
   "nexe": {
     "input": "main.js",
-    "output": "out/sfwc",
+    "output": "test",
     "browserify": {
       "excludes": [
         "spawn-sync"
       ],
       "requires": []
+    },
+    "runtime": {
+      "framework": "nodejs"
     }
   }
 }
