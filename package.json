@@ -35,7 +35,7 @@
   },
   "nexe": {
     "input": "main.js",
-    "output": "test",
+    "output": "out/sfcw",
     "browserify": {
       "excludes": [
         "spawn-sync"
