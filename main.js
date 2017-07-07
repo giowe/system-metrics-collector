@@ -6,9 +6,6 @@ const path = require('path');
 const { argv } = require('yargs');
 const { exec } = require('child_process');
 const readFile = require('./readFileT.js');
-const accessKeyId = null;
-const secretAccessKey = null;
-const region = null;
 
 const config = {
   /*id: null,
@@ -175,15 +172,9 @@ Promise.all(promises).then(values => {
 });
 
 
-function _initializeS3(config, argv) {
+function _initializeS3(config) {
   if(config.aws) {
     return new AWS.S3(config.aws);
-  } else if(accessKeyId) {
-    return new AWS.S3({
-      accessKeyId,
-      secretAccessKey,
-      region
-    });
   } else {
     return new AWS.S3();
   }
