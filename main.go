@@ -62,10 +62,11 @@ func main() {
   ram := getFile("/proc/meminfo")
   cpu := getFile("/proc/stat")
   cpuInfo := getFile("/proc/cpuinfo")
+  disk := cmd("/bin/df", "-klP")
 
-  fmt.Print(net)
-  fmt.Print(ram)
-  fmt.Print(cpu)
-  fmt.Print(cpuInfo)
-  fmt.Println(cmd("/bin/df", "-klP"))
+  fmt.Println(net)
+  fmt.Println(ram)
+  fmt.Println(cpu)
+  fmt.Println(cpuInfo)
+  fmt.Println(disk)
 }
