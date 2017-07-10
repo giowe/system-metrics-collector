@@ -5,23 +5,14 @@ const fs = require('fs');
 const path = require('path');
 const { argv } = require('yargs');
 const { exec } = require('child_process');
-const readFile = require('./readFileT.js');
+const { readFile } = require('fs');
 
-const config = {
-  /*id: null,
-  customerId: null,
-  bucket: null,
-  aws: {
-    accessKeyId: null,
-    secretAccessKey: null,
-    region: null
-  }*/
-};
+const config = {};
 
 try {
-  Object.assign(config, JSON.parse(fs.readFileSync(path.join(process.env.HOME, '.sfcwrc'), 'UTF-8')));
+  Object.assign(config, JSON.parse(fs.readFileSync(path.join(process.env.HOME, '.cwc'), 'UTF-8')));
 } catch(ignore) {
-  console.log(`Can't find config file at ${path.join(process.env.HOME, '.sfcwrc')}`);
+  console.log(`Can't find config file at ${path.join(process.env.HOME, '.cwc')}`);
 }
 
 if(argv.customerId) config.customerId = argv.customerId;
@@ -62,12 +53,12 @@ const promises = [
 ];
 
 Promise.all(promises).then(values => {
-  const ram = values[1].data;
-  const cpu = values[2].data.split(/[\r\n]/);
+  const ram = values[1];
+  const cpu = values[2].split(/[\r\n]/);
   const disk = values[3].split(/[\r\n]/);
   const time = Date.now().valueOf();
-  const cpuInfo = values[4].data;
-  const net = values[0].data.split(/[\r\n]/);
+  const cpuInfo = values[4];
+  const net = values[0].split(/[\r\n]/);
 
   const cpuResult = {
     Speed: [],

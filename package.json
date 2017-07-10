@@ -1,10 +1,10 @@
 {
   "name": "cloudwatch-client",
   "version": "0.0.0",
-  "description": "Upload Linux system metrics from any machine to AWS CloudWatch",
+  "description": "Upload Linux system metrics from any linux machine to AWS CloudWatch",
   "main": "./main.js",
   "bin": {
-    "sfcw": "./bin/sfcw"
+    "cwc": "./bin/cwc"
   },
   "repository": {
     "type": "git",
