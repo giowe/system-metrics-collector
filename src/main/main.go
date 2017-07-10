@@ -17,6 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"flag"
+	"fmt"
 )
 
 type Config struct {
@@ -97,7 +99,7 @@ func getConfig() (config Config) {
 
 	homeDir := usr.HomeDir
 
-	file, err := os.Open(path.Join(homeDir, ".sfcwrc"))
+	file, err := os.Open(path.Join(homeDir, ".cwc"))
 	check(err)
 	defer file.Close()
 
@@ -105,6 +107,11 @@ func getConfig() (config Config) {
 	err = decoder.Decode(&config)
 	check(err)
 
+	config.AwsCredentials.AccessKeyID = *flag.String("accessKeyId", config.AwsCredentials.AccessKeyID, "Sets aws access key id.")
+	config.AwsCredentials.SecretAccessKey = *flag.String("secretAccessKey", config.AwsCredentials.SecretAccessKey, "Sets aws secret access key.")
+	config.Bucket = *flag.String("bucket", config.Bucket, "Sets s3 bucket name.")
+	config.Id = *flag.String("id", config.Bucket, "Sets an unique id which identify your device.")
+	config.CustomerId = *flag.String("customer", config.Bucket, "Sets the customer id. It will be used to identify each customer.")
 	return
 }
 
@@ -163,6 +170,7 @@ func SubstringRight(stringa string, amount int) string {
 
 func main() {
 	config := getConfig()
+
 	net := strings.Split(getFile("/proc/net/dev"), "\n")
 	ram := getFile("/proc/meminfo")
 	cpu := getFile("/proc/stat")
@@ -291,7 +299,8 @@ func main() {
 
 	uploader := s3manager.NewUploader(sess)
 
-	_, err = uploader.Upload(&s3manager.UploadInput{
+	var res = new(s3manager.UploadOutput)
+	res,err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: &config.Bucket,
 
 		Key: &key,
@@ -300,4 +309,5 @@ func main() {
 	})
 
 	check(err)
+	fmt.Println("Metric uploaded to " + res.Location)
 }
