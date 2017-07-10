@@ -1,6 +1,6 @@
 {
   "name": "cloudwatch-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Upload Linux system metrics from any linux machine to AWS CloudWatch",
   "main": "./main.js",
   "bin": {
