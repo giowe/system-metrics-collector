@@ -10,6 +10,7 @@ import (
   "fmt"
   "os/exec"
   "bytes"
+  "regexp"
 )
 
 type Config struct {
@@ -56,6 +57,13 @@ func cmd(command string, args ...string) string {
   return out.String()
 }
 
+func findValueIndexesFromText(text string, key string, separator string) (startIndex int, endIndex int) {
+  r, err := regexp.Compile(key)
+  check(err)
+  fmt.Println(r.FindAllString(text, -1))
+  return 1, 1
+}
+
 func main() {
   //config := getConfig()
   net := getFile("/proc/net/dev")
@@ -69,4 +77,6 @@ func main() {
   fmt.Println(cpu)
   fmt.Println(cpuInfo)
   fmt.Println(disk)
+
+  findValueIndexesFromText(cpu, "cpu MHz", ":")
 }
