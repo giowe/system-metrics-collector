@@ -19,7 +19,8 @@ This tool is available both for [Go](https://github.com/giowe/cloudwatch-client/
 
 ##### 1. Go
 You need to install Go first.
-Please follow this [instructions](https://golang.org/doc/install)
+Please follow this [instructions](https://golang.org/doc/install).
+Then you can write this command to build this tool:
 ```shell
 go build -o build/cwc src/main/main.go
 ```
