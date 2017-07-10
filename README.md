@@ -35,8 +35,6 @@ This file is structured like this
 ```
 ### Flags
 Otherwise you can run this tool with several flags (flags overcome config values)
-   - ```--accessKeyId```  Sets aws access key id.
-   - ```--secretAccessKey``` Sets aws secret access key.
    - ```--bucket``` Sets s3 bucket name.
    - ```--id``` Sets an unique id which identify your device.
    - ```--customerId``` Sets the customer id. It will be used to identify your customers.

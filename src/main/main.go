@@ -107,8 +107,6 @@ func getConfig() (config Config) {
 	err = decoder.Decode(&config)
 	check(err)
 
-	config.AwsCredentials.AccessKeyID = *flag.String("accessKeyId", config.AwsCredentials.AccessKeyID, "Sets aws access key id.")
-	config.AwsCredentials.SecretAccessKey = *flag.String("secretAccessKey", config.AwsCredentials.SecretAccessKey, "Sets aws secret access key.")
 	config.Bucket = *flag.String("bucket", config.Bucket, "Sets s3 bucket name.")
 	config.Id = *flag.String("id", config.Bucket, "Sets an unique id which identify your device.")
 	config.CustomerId = *flag.String("customer", config.Bucket, "Sets the customer id. It will be used to identify each customer.")
