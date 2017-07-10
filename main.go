@@ -77,6 +77,7 @@ type NetworkResult struct {
 }
 
 type MetricsResult struct {
+	Id string
 	Time int64
 	Cpu      CpuResult
 	Memory      RamResult
@@ -167,6 +168,7 @@ func main() {
 	cpu := getFile("/proc/stat")
 	cpuInfo := getFile("/proc/cpuinfo")
 	disk := strings.Split(cmd("/bin/df", "-klP"), "\n")
+	unixTime := time.Now().Unix() * 1000
 
 	cpuSpeed := convertStringArrayToFloat(findMultipleValuesFromText(cpuInfo, "cpu MHz", ':'))
 	numCpus := len(cpuSpeed)
@@ -254,7 +256,8 @@ func main() {
 	}
 
 	metricsResult := &MetricsResult{
-		Time: time.Now().Unix() * 1000,
+		Id: config.Id,
+		Time: unixTime,
 		Cpu: CpuResult{
 			Speed: cpuSpeed,
 			NumCpus: numCpus,
@@ -284,7 +287,7 @@ func main() {
 
 	sess := session.Must(session.NewSession(awsConfig))
 
-	key := config.CustomerId + "/" + config.Id + "/" + config.CustomerId + "_" + config.Id + "_" + strconv.Itoa(int(metricsResult.Time))
+	key := config.CustomerId + "/" + config.Id + "/" + config.CustomerId + "_" + config.Id + "_" + strconv.Itoa(int(unixTime))
 
 	uploader := s3manager.NewUploader(sess)
 
