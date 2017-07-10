@@ -6,7 +6,7 @@ CloudWatch is only compatible with Linux.
 We recommend you to use [metrics2xlsx](https://www.npmjs.com/package/metrics2xlsx) to visualize these data.
 
 ### How to use it
-This tool is available both for [Go](https://github.com/giowe/cloudwatch-client/tree/go) and [JavaScript](https://github.com/giowe/cloudwatch-client).
+This tool is available both for [Go](https://github.com/giowe/cloudwatch-client/tree/go) and [NodeJs](https://github.com/giowe/cloudwatch-client).
 
 ##### 1. Go
 You need to install Go first.
