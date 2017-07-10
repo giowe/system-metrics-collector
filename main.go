@@ -49,7 +49,7 @@ type CpuInfo struct {
 
 type CpuResult struct {
 	Speed []float64
-	NumCpus int `json:"numCpus"`
+	NumCpus int
 	TotalCpuUsage CpuInfo
 	CpusUsage []CpuInfo
 }
@@ -283,7 +283,6 @@ func main() {
 	}
 
 	sess := session.Must(session.NewSession(awsConfig))
-
 
 	key := config.CustomerId + "/" + config.Id + "/" + config.CustomerId + "_" + config.Id + "_" + strconv.Itoa(int(metricsResult.Time))
 
