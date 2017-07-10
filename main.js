@@ -70,44 +70,39 @@ Promise.all(promises).then(values => {
   const net = values[0].data.split(/[\r\n]/);
 
   const cpuResult = {
-    time: values[2].time,
-    total: null,
-    cpus: []
+    Speed: [],
+    NumCpus: cpuInfo.length - 1,
+    CpusUsage: [],
+    TotalCpuUsage: null
   };
 
-  const cores = cpuInfo.length - 1;
-  cpuResult.info = {
-    cores,
-    speed: []
-  };
-
-  cpuResult.info.speed = _findMultipleValuesFromText(cpuInfo, 'cpu MHz', ':').map(value => {
+  cpuResult.Speed = _findMultipleValuesFromText(cpuInfo, 'cpu MHz', ':').map(value => {
     return parseInt(value);
   });
 
-  cpuResult.info.cores = cpuResult.info.speed.length;
+  cpuResult.NumCpus = cpuResult.Speed.length;
 
   cpu.some((line, index) => {
     if(!line.startsWith('cpu')) return true;
     const [cpuName, user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice] = line.replace(/\s+/, ' ').split(/ /g);
     const result = {
-      cpuName,
-      user: parseInt(user),
-      nice: parseInt(nice),
-      system: parseInt(system),
-      idle: parseInt(idle),
-      iowait: parseInt(iowait),
-      irq: parseInt(irq),
-      softirq: parseInt(softirq),
-      steal: parseInt(steal),
-      guest: parseInt(guest),
-      guest_nice: parseInt(guest_nice)
+      CpuName: cpuName,
+      User: parseInt(user),
+      Nice: parseInt(nice),
+      System: parseInt(system),
+      Idle: parseInt(idle),
+      Iowait: parseInt(iowait),
+      Irq: parseInt(irq),
+      Softirq: parseInt(softirq),
+      Steal: parseInt(steal),
+      Guest: parseInt(guest),
+      GuestNice: parseInt(guest_nice)
     };
 
     if(index === 0) {
-      cpuResult.total = result;
+      cpuResult.TotalCpuUsage = result;
     } else {
-      cpuResult.cpus.push(result);
+      cpuResult.CpusUsage.push(result);
     }
   });
 
@@ -119,11 +114,11 @@ Promise.all(promises).then(values => {
     if(line.length < 6) return;
 
     diskResult.push({
-      name: line[0],
-      mountPoint: line[5],
-      capacity: parseInt(line[4]),
-      used: parseInt(line[2]),
-      available: parseInt(line[3])
+      Name: line[0],
+      MountPoint: line[5],
+      Capacity: parseInt(line[4]),
+      Used: parseInt(line[2]),
+      Available: parseInt(line[3])
     });
 
   });
@@ -135,26 +130,25 @@ Promise.all(promises).then(values => {
     const split = line.trim().split(/\s+/);
     if(split.length < 11) return;
     netResult.push({
-      name: split[0].substring(0, split[0].length-1),
-      bytes_in: parseInt(split[1]),
-      packets_in: parseInt(split[2]),
-      bytes_out: parseInt(split[9]),
-      packets_out: parseInt(split[10])
+      Name: split[0].substring(0, split[0].length-1),
+      BytesIn: parseInt(split[1]),
+      PacketsIn: parseInt(split[2]),
+      BytesOut: parseInt(split[9]),
+      PacketsOut: parseInt(split[10])
     });
   });
 
   const out = {
-    id: argv.id || config.id, //todo aggiungi caricato da file di ubuntu,
-    time,
-    cpu: cpuResult,
-    memory: {
-      time: values[1].time,
+    Id: argv.id || config.id,
+    Time: time,
+    Cpu: cpuResult,
+    Memory: {
       MemTotal: parseInt(_findSingleValueFromText(ram, 'MemTotal', ':').slice(0, -2)),
       MemFree: parseInt(_findSingleValueFromText(ram, 'MemFree', ':').slice(0, -2)),
       MemAvailable: parseInt(_findSingleValueFromText(ram, 'MemAvailable', ':').slice(0, -2))
     },
-    disk: diskResult,
-    network: netResult
+    Disks: diskResult,
+    Network: netResult
   };
 
   //console.log(JSON.stringify(out));
@@ -162,7 +156,7 @@ Promise.all(promises).then(values => {
   const s3 = _initializeS3(config, argv);
   s3.upload({
     Bucket: config.bucket,
-    Key: `${config.customerId}/${out.id}/${config.customerId}_${out.id}_${time}`,
+    Key: `${config.customerId}/${out.Id}/${config.customerId}_${out.Id}_${time}`,
     ContentType: 'application/json',
     Body: JSON.stringify(out)
   }, (err, result) => {
