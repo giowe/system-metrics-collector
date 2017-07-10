@@ -6,9 +6,6 @@ const path = require('path');
 const { argv } = require('yargs');
 const { exec } = require('child_process');
 const readFile = require('./readFileT.js');
-const accessKeyId = null;
-const secretAccessKey = null;
-const region = null;
 
 const config = {
   /*id: null,
@@ -66,11 +63,11 @@ const promises = [
 
 Promise.all(promises).then(values => {
   const ram = values[1].data;
-  const cpu = values[2].data.split(/\r|\n/);
-  const disk = values[3].split(/\r|\n/);
+  const cpu = values[2].data.split(/[\r\n]/);
+  const disk = values[3].split(/[\r\n]/);
   const time = Date.now().valueOf();
   const cpuInfo = values[4].data;
-  const net = values[0].data.split(/\r|\n/);
+  const net = values[0].data.split(/[\r\n]/);
 
   const cpuResult = {
     time: values[2].time,
@@ -84,13 +81,28 @@ Promise.all(promises).then(values => {
     speed: []
   };
 
-  cpuResult.info.speed = _findMultipleValuesFromText(cpuInfo, 'cpu MHz', ':');
+  cpuResult.info.speed = _findMultipleValuesFromText(cpuInfo, 'cpu MHz', ':').map(value => {
+    return parseInt(value);
+  });
+
   cpuResult.info.cores = cpuResult.info.speed.length;
 
   cpu.some((line, index) => {
     if(!line.startsWith('cpu')) return true;
     const [cpuName, user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice] = line.replace(/\s+/, ' ').split(/ /g);
-    const result = { cpuName, user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice };
+    const result = {
+      cpuName,
+      user: parseInt(user),
+      nice: parseInt(nice),
+      system: parseInt(system),
+      idle: parseInt(idle),
+      iowait: parseInt(iowait),
+      irq: parseInt(irq),
+      softirq: parseInt(softirq),
+      steal: parseInt(steal),
+      guest: parseInt(guest),
+      guest_nice: parseInt(guest_nice)
+    };
 
     if(index === 0) {
       cpuResult.total = result;
@@ -109,9 +121,9 @@ Promise.all(promises).then(values => {
     diskResult.push({
       name: line[0],
       mountPoint: line[5],
-      capacity: line[4],
-      used: line[2],
-      available: line[3]
+      capacity: parseInt(line[4]),
+      used: parseInt(line[2]),
+      available: parseInt(line[3])
     });
 
   });
@@ -124,10 +136,10 @@ Promise.all(promises).then(values => {
     if(split.length < 11) return;
     netResult.push({
       name: split[0].substring(0, split[0].length-1),
-      bytes_in: split[1],
-      packets_in: split[2],
-      bytes_out: split[9],
-      packets_out: split[10]
+      bytes_in: parseInt(split[1]),
+      packets_in: parseInt(split[2]),
+      bytes_out: parseInt(split[9]),
+      packets_out: parseInt(split[10])
     });
   });
 
@@ -137,13 +149,15 @@ Promise.all(promises).then(values => {
     cpu: cpuResult,
     memory: {
       time: values[1].time,
-      MemTotal: _findSingleValueFromText(ram, 'MemTotal', ':').slice(0, -2),
-      MemFree: _findSingleValueFromText(ram, 'MemFree', ':').slice(0, -2),
-      MemAvailable: _findSingleValueFromText(ram, 'MemAvailable', ':').slice(0, -2)
+      MemTotal: parseInt(_findSingleValueFromText(ram, 'MemTotal', ':').slice(0, -2)),
+      MemFree: parseInt(_findSingleValueFromText(ram, 'MemFree', ':').slice(0, -2)),
+      MemAvailable: parseInt(_findSingleValueFromText(ram, 'MemAvailable', ':').slice(0, -2))
     },
     disk: diskResult,
     network: netResult
   };
+
+  //console.log(JSON.stringify(out));
 
   const s3 = _initializeS3(config, argv);
   s3.upload({
@@ -158,15 +172,9 @@ Promise.all(promises).then(values => {
 });
 
 
-function _initializeS3(config, argv) {
+function _initializeS3(config) {
   if(config.aws) {
     return new AWS.S3(config.aws);
-  } else if(accessKeyId) {
-    return new AWS.S3({
-      accessKeyId,
-      secretAccessKey,
-      region
-    });
   } else {
     return new AWS.S3();
   }
