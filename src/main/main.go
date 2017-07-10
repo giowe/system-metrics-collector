@@ -107,9 +107,14 @@ func getConfig() (config Config) {
 	err = decoder.Decode(&config)
 	check(err)
 
-	config.Bucket = *flag.String("bucket", config.Bucket, "Sets s3 bucket name.")
-	config.Id = *flag.String("id", config.Bucket, "Sets an unique id which identify your device.")
-	config.CustomerId = *flag.String("customer", config.Bucket, "Sets the customer id. It will be used to identify each customer.")
+	bucketFlag := flag.String("bucket", config.Bucket, "Sets s3 bucket name.")
+	idFlag := flag.String("id", config.Bucket, "Sets an unique id which identify your device.")
+	customerIdFlag := flag.String("customer", config.Bucket, "Sets the customer id. It will be used to identify each customer.")
+	flag.Parse()
+	config.Bucket = *bucketFlag
+	config.Id = *idFlag
+	config.CustomerId = *customerIdFlag
+
 	return
 }
 
