@@ -7,21 +7,30 @@ import (
 	"path"
 	"encoding/json"
 	"io/ioutil"
-	"fmt"
 	"os/exec"
 	"bytes"
 	"regexp"
 	"strings"
 	"strconv"
 	"time"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 )
 
 type Config struct {
 	Id string         `json:"id"`
 	CustomerId string `json:"customerId"`
 	Bucket string     `json:"bucket"`
+	AwsCredentials AwsCredentials `json:"aws"`
+}
+
+type AwsCredentials struct {
+	AccessKeyID string `json:"accessKeyId"`
+	SecretAccessKey string `json:"secretAccessKey"`
+	SessionToken string `json:"sessionToken"`
+	Region string `json:"region"`
 }
 
 type CpuInfo struct {
@@ -245,7 +254,7 @@ func main() {
 	}
 
 	metricsResult := &MetricsResult{
-		Time: time.Now().Unix(),
+		Time: time.Now().Unix() * 1000,
 		Cpu: CpuResult{
 			Speed: cpuSpeed,
 			NumCpus: numCpus,
@@ -264,17 +273,29 @@ func main() {
 	s3Json, err := json.Marshal(metricsResult)
 	check(err)
 
-	sess := session.Must(session.NewSession())
-	svc := s3.New(sess)
-
-	key := config.CustomerId + "/" + config.Id + "/" + config.CustomerId + "_" + config.Id + "_" + string(metricsResult.Time)
-
-	upParams := &s3.PutObjectInput{
-		Bucket: &config.Bucket,
-		Key:    &key,
-		Body:   strings.NewReader(string(s3Json)),
+	awsConfig := aws.NewConfig()
+	if config.AwsCredentials.Region != "" {
+		awsConfig.Region = &config.AwsCredentials.Region
 	}
 
-	svc.PutObject(upParams)
-	fmt.Println(upParams)
+	if config.AwsCredentials.AccessKeyID != "" && config.AwsCredentials.SecretAccessKey != "" {
+		awsConfig.Credentials = credentials.NewStaticCredentials(config.AwsCredentials.AccessKeyID, config.AwsCredentials.SecretAccessKey, config.AwsCredentials.SessionToken)
+	}
+
+	sess := session.Must(session.NewSession(awsConfig))
+
+
+	key := config.CustomerId + "/" + config.Id + "/" + config.CustomerId + "_" + config.Id + "_" + strconv.Itoa(int(metricsResult.Time))
+
+	uploader := s3manager.NewUploader(sess)
+
+	_, err = uploader.Upload(&s3manager.UploadInput{
+		Bucket: &config.Bucket,
+
+		Key: &key,
+
+		Body: strings.NewReader(string(s3Json)),
+	})
+
+	check(err)
 }
