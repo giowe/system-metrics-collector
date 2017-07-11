@@ -5,8 +5,9 @@ const path = require('path');
 const { argv } = require('yargs');
 const { exec } = require('child_process');
 const { readFile } = require('fs');
-
+const AWS = require('aws-sdk');
 const config = {};
+const zlib = require('zlib');
 
 try {
   Object.assign(config, JSON.parse(fs.readFileSync(path.join(process.env.HOME, '.smc'), 'UTF-8')));
@@ -141,7 +142,27 @@ Promise.all(promises).then(values => {
   };
 
   //console.log(JSON.stringify(out));
+
+  const s3 = _initializeS3(config, argv);
+
+  s3.upload({
+    Bucket: config.bucket,
+    Key: `${config.customerId}/${out.Id}/${config.customerId}_${out.Id}_${time}`,
+    ContentType: 'application/json',
+    Body: zlib.deflateSync(JSON.stringify(out))
+  }, (err, result) => {
+    if(err) return console.log(err);
+    console.log(result);
+  });
 });
+
+function _initializeS3(config) {
+  if(config.aws) {
+    return new AWS.S3(config.aws);
+  } else {
+    return new AWS.S3();
+  }
+}
 
 function _findValueIndexesFromText(text, key, separator, reg = new RegExp(key)) {
   let startIndex = text.search(reg);
