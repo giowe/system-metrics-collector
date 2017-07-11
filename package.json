@@ -1,6 +1,6 @@
 {
   "name": "system-metrics-collector",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Send Linux system metrics from any linux machine to Aws S3",
   "main": "./main.js",
   "bin": {
