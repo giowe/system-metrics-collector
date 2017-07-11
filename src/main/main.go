@@ -19,12 +19,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"flag"
 	"fmt"
+	"compress/zlib"
 )
 
 type Config struct {
 	Id string         `json:"id"`
 	CustomerId string `json:"customerId"`
-        Bucket  string `json:"bucket"`
+	Bucket  string `json:"bucket"`
 	AwsCredentials AwsCredentials `json:"aws"`
 }
 
@@ -107,12 +108,12 @@ func getConfig() (config Config) {
 	err = decoder.Decode(&config)
 	check(err)
 
-        bucket := flag.String("bucket", config.Bucket, "Sets the bucket name")
+	bucket := flag.String("bucket", config.Bucket, "Sets the bucket name")
 	idFlag := flag.String("id", config.Id, "Sets an unique id which identify your device.")
 	customerIdFlag := flag.String("customer", config.CustomerId, "Sets the customer id. It will be used to identify each customer.")
 	flag.Parse()
 
-        customer.Bucket = *bucket
+	config.Bucket = *bucket
 	config.Id = *idFlag
 	config.CustomerId = *customerIdFlag
 	return
@@ -302,13 +303,18 @@ func main() {
 
 	uploader := s3manager.NewUploader(sess)
 
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	w.Write([]byte(string(s3Json)))
+	w.Close()
+
 	var res = new(s3manager.UploadOutput)
 	res,err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: &config.Bucket,
 
 		Key: &key,
 
-		Body: strings.NewReader(string(s3Json)),
+		Body: bytes.NewReader(b.Bytes()),
 	})
 
 	check(err)
