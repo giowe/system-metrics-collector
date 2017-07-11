@@ -24,6 +24,7 @@ import (
 type Config struct {
 	Id string         `json:"id"`
 	CustomerId string `json:"customerId"`
+        Bucket  string `json:"bucket"`
 	AwsCredentials AwsCredentials `json:"aws"`
 }
 
@@ -106,10 +107,12 @@ func getConfig() (config Config) {
 	err = decoder.Decode(&config)
 	check(err)
 
+        bucket := flag.String("bucket", config.Bucket, "Sets the bucket name")
 	idFlag := flag.String("id", config.Id, "Sets an unique id which identify your device.")
 	customerIdFlag := flag.String("customer", config.CustomerId, "Sets the customer id. It will be used to identify each customer.")
 	flag.Parse()
 
+        customer.Bucket = *bucket
 	config.Id = *idFlag
 	config.CustomerId = *customerIdFlag
 	return
