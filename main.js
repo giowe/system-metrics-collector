@@ -17,6 +17,7 @@ try {
 
 if(argv.customerId) config.customerId = argv.customerId;
 if(argv.id) config.id = argv.id;
+if(argv.bucket) config.bucket = argv.bucket;
 
 const promises = [
   new Promise((resolve, reject) => {
