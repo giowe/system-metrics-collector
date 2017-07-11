@@ -1,7 +1,7 @@
 {
   "name": "system-metrics-collector",
   "version": "1.0.0",
-  "description": "Send Linux system metrics from any linux machine to an Aws Lambda",
+  "description": "Send Linux system metrics from any linux machine to Aws S3",
   "main": "./main.js",
   "bin": {
     "smc": "./bin/smc"
