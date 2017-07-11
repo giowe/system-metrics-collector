@@ -8,9 +8,16 @@ const { readFile } = require('fs');
 const AWS = require('aws-sdk');
 const config = {};
 const zlib = require('zlib');
+const configFileName = path.join(process.env.HOME, '.smc');
+const lastDataFileName = path.join(process.env.HOME, '.smclastdata');
+
+let lastKey = null;
+try {
+  lastKey = fs.readFileSync(lastDataFileName, 'UTF-8');
+} catch(ignore) {}
 
 try {
-  Object.assign(config, JSON.parse(fs.readFileSync(path.join(process.env.HOME, '.smc'), 'UTF-8')));
+  Object.assign(config, JSON.parse(fs.readFileSync(configFileName, 'UTF-8')));
 } catch(ignore) {
   console.log(`Can't find config file at ${path.join(process.env.HOME, '.smc')}`);
 }
@@ -146,15 +153,21 @@ Promise.all(promises).then(values => {
 
   const s3 = _initializeS3(config, argv);
 
+  const key = `${config.customerId}/${out.Id}/${config.customerId}_${out.Id}_${time}`;
   s3.upload({
     Bucket: config.bucket,
-    Key: `${config.customerId}/${out.Id}/${config.customerId}_${out.Id}_${time}`,
+    Key: key,
     ContentType: 'application/json',
-    Body: zlib.deflateSync(JSON.stringify(out))
+    Body: zlib.deflateSync(JSON.stringify(out)),
+    Metadata: lastKey ? {
+      PreviousKey: lastKey
+    } : null
   }, (err, result) => {
     if(err) return console.log(err);
     console.log(result);
   });
+
+  fs.writeFileSync(lastDataFileName, key);
 });
 
 function _initializeS3(config) {
