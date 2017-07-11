@@ -185,9 +185,11 @@ func main() {
 	cpuSpeed := convertStringArrayToFloat(findMultipleValuesFromText(cpuInfo, "cpu MHz", ':'))
 	numCpus := len(cpuSpeed)
 
-	memAvailable := parseInt(SubstringRight(findMultipleValuesFromText(ram, "MemAvailable", ':')[0], 3))
 	memFree := parseInt(SubstringRight(findMultipleValuesFromText(ram, "MemFree", ':')[0], 3))
 	memTotal := parseInt(SubstringRight(findMultipleValuesFromText(ram, "MemTotal", ':')[0], 3))
+	Cached := parseInt(SubstringRight(findMultipleValuesFromText(ram, "Cached", ':')[0], 3))
+	Buffers := parseInt(SubstringRight(findMultipleValuesFromText(ram, "Buffers", ':')[0], 3))
+	memAvailable := memFree + Cached + Buffers
 
 	cpuLines := strings.SplitN(cpu, "\n", -1 )
 	var cpuTotal CpuInfo
