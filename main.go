@@ -160,7 +160,7 @@ func findMultipleValuesFromText(text string, key string, separator byte) []strin
 func findSingleValueFromText(text string, key string, separator byte) string {
 	result := findMultipleValuesFromText(text, key, separator)
 	if result == nil || len(result) < 1 {
-		return nil
+		return ""
 	} else {
 		return result[0]
 	}
