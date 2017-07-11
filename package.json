@@ -1,10 +1,10 @@
 {
-  "name": "cloudwatch-client",
+  "name": "system-metrics-collector",
   "version": "1.0.2",
-  "description": "Upload Linux system metrics from any linux machine to AWS CloudWatch",
+  "description": "Send Linux system metrics from any linux machine to an Aws Lambda",
   "main": "./main.js",
   "bin": {
-    "cwc": "./bin/cwc"
+    "smc": "./bin/smc"
   },
   "repository": {
     "type": "git",

@@ -1,4 +1,4 @@
-# cloudwatch-client
+# system-metrics-collector
 [![NPM version][npm-image]][npm-url] [![Downloads][downloads-image]][npm-url] [![Dependency Status][dependencies-image]][dependencies-url] [![Gandalf Status][gandalf-image]][gandalf-url]
 
 [npm-url]: https://www.npmjs.com/package/cloudwatch-client
@@ -9,9 +9,9 @@
 [gandalf-url]: https://www.youtube.com/watch?v=Sagg08DrO5U
 [gandalf-image]: http://img.shields.io/badge/gandalf-approved-61C6FF.svg
 
-### What is CloudWatch Client?
-CloudWatch Client is a tool that allows you to collect system information and upload them on Amazon S3.
-CloudWatch is only compatible with Linux.
+### What is System Metrics Collector?
+System Metrics Collector is a tool that allows you to collect system information and send them to an Aws Lambda.
+System Metrics Collector is only compatible with Linux.
 We recommend you to use [metrics2xlsx](https://www.npmjs.com/package/metrics2xlsx) to visualize these data.
 
 ### How to use it
@@ -22,20 +22,19 @@ You need to install Go first.
 Please follow this [instructions](https://golang.org/doc/install).
 Then you can write this command to build this tool:
 ```shell
-go build -o build/cwc src/main/main.go
+go build -o build/smc src/main/main.go
 ```
 ##### 2. Node
 ```shell
-npm install -g cloudwatch-client
+npm install -g system-metrics-collector
 ```
 ### Configuration
-Before starting using this tool you have to create a configuration file called .cwc in your Home folder.
+Before starting using this tool you have to create a configuration file called .smc in your Home folder.
 This file is structured like this
 ```
 {
   "id": "customer-pc-1",
   "customerId": "customer name",
-  "bucket": "s3-bucket",
   "aws": {
     "accessKeyId": "",
     "secretAccessKey": "",
@@ -45,15 +44,14 @@ This file is structured like this
 ```
 ### Flags
 Otherwise you can run this tool with several flags (flags overcome config values)
-   - ```--bucket``` Sets s3 bucket name.
    - ```--id``` Sets an unique id which identify your device.
    - ```--customerId``` Sets the customer id. It will be used to identify your customers.
 
 ### How to run it
 ##### 1. Go
-Go builds the executable file named 'cwc' into 'build' directory.
+Go builds the executable file named 'smc' into 'build' directory.
 ##### 2. Node
 You can simply run it by writing:
 ```shell
-cwc
+smc
 ```
