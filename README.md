@@ -1,7 +1,7 @@
 # system-metrics-collector
 
 ### What is System Metrics Collector?
-System Metrics Collector is a tool that allows you to collect system information and send them to an Aws Lambda.
+System Metrics Collector is a tool that allows you to collect system information and upload them on a S3 bucket.
 System Metrics Collector is only compatible with Linux.
 We recommend you to use [metrics2xlsx](https://www.npmjs.com/package/metrics2xlsx) to visualize these data.
 
@@ -13,7 +13,7 @@ You need to install Go first.
 Please follow this [instructions](https://golang.org/doc/install).
 Then you can write this command to build this tool:
 ```shell
-go build -o build/smc src/main/main.go
+go build -o build/smc main.go
 ```
 ##### 2. Node
 ```shell
@@ -26,6 +26,7 @@ This file is structured like this
 {
   "id": "customer-pc-1",
   "customerId": "customer name",
+  "bucket": "bucket name",
   "aws": {
     "accessKeyId": "",
     "secretAccessKey": "",
@@ -35,6 +36,7 @@ This file is structured like this
 ```
 ### Flags
 Otherwise you can run this tool with several flags (flags overcome config values)
+   - ```--bucket``` Sets s3 bucket name.
    - ```--id``` Sets an unique id which identify your device.
    - ```--customerId``` Sets the customer id. It will be used to identify your customers.
 
