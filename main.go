@@ -138,6 +138,9 @@ func findMultipleValuesFromText(text string, key string, separator byte) []strin
 	r, err := regexp.Compile(key)
 	check(err)
 	indexes := r.FindAllStringIndex(text, -1)
+	if indexes == nil {
+		return nil
+	}
 	textLen := len(text)
 	results := make([]string, len(indexes))
 	for i, index := range indexes {
@@ -152,6 +155,15 @@ func findMultipleValuesFromText(text string, key string, separator byte) []strin
 		results[i] = strings.TrimSpace(text[startIndex:endIndex])
 	}
 	return results
+}
+
+func findSingleValueFromText(text string, key string, separator byte) string {
+	result := findMultipleValuesFromText(text, key, separator)
+	if result == nil || len(result) < 1 {
+		return nil
+	} else {
+		return result[0]
+	}
 }
 
 func convertStringArrayToFloat(array []string) []float64{
@@ -185,10 +197,10 @@ func main() {
 	cpuSpeed := convertStringArrayToFloat(findMultipleValuesFromText(cpuInfo, "cpu MHz", ':'))
 	numCpus := len(cpuSpeed)
 
-	memFree := parseInt(SubstringRight(findMultipleValuesFromText(ram, "MemFree", ':')[0], 3))
-	memTotal := parseInt(SubstringRight(findMultipleValuesFromText(ram, "MemTotal", ':')[0], 3))
-	Cached := parseInt(SubstringRight(findMultipleValuesFromText(ram, "Cached", ':')[0], 3))
-	Buffers := parseInt(SubstringRight(findMultipleValuesFromText(ram, "Buffers", ':')[0], 3))
+	memFree := parseInt(SubstringRight(findSingleValueFromText(ram, "MemFree", ':'), 3))
+	memTotal := parseInt(SubstringRight(findSingleValueFromText(ram, "MemTotal", ':'), 3))
+	Cached := parseInt(SubstringRight(findSingleValueFromText(ram, "Cached", ':'), 3))
+	Buffers := parseInt(SubstringRight(findSingleValueFromText(ram, "Buffers", ':'), 3))
 	memAvailable := memFree + Cached + Buffers
 
 	cpuLines := strings.SplitN(cpu, "\n", -1 )
