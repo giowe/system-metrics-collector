@@ -26,7 +26,6 @@ This file is structured like this
 {
   "id": "customer-pc-1",
   "customerId": "customer name",
-  "bucket": "bucket name",
   "aws": {
     "accessKeyId": "",
     "secretAccessKey": "",
@@ -36,7 +35,6 @@ This file is structured like this
 ```
 ### Flags
 Otherwise you can run this tool with several flags (flags overcome config values)
-   - ```--bucket``` Sets s3 bucket name.
    - ```--id``` Sets an unique id which identify your device.
    - ```--customerId``` Sets the customer id. It will be used to identify your customers.
 
