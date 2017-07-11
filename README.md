@@ -1,5 +1,5 @@
 # system-metrics-collector
-[![NPM version][npm-image]][npm-url] [![Downloads][downloads-image]][npm-url] [![Dependency Status][dependencies-image]][dependencies-url] [![Gandalf Status][gandalf-image]][gandalf-url]
+[![NPM version][npm-image]][npm-url] [![Downloads][downloads-image]][npm-url] [![Dependency Status][dependencies-image]][npm-url] [![Gandalf Status][gandalf-image]][gandalf-url]
 
 [npm-url]: https://www.npmjs.com/package/system-metrics-collector
 [npm-image]: http://img.shields.io/npm/v/system-metrics-collector.svg?style=flat
