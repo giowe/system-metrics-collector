@@ -25,7 +25,7 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/giowe/cloudwatch-client/issues"
+    "url": "https://github.com/giowe/system-metrics-collector/issues"
   },
   "dependencies": {
     "aws-sdk": "^2.81.0",
