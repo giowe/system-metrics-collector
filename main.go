@@ -81,7 +81,7 @@ type NetworkResult struct {
 
 type MetricsResult struct {
 	Id string
-
+	CustomerId string
 	Time int64
 	Cpu      CpuResult
 	Memory      RamResult
@@ -249,7 +249,7 @@ func main() {
 	Buffers := parseInt(SubstringRight(buffersRaw, 3))
 	memAvailable := memFree + Cached + Buffers
 
-	cpuLines := strings.SplitN(cpu, "\n", -1)
+	cpuLines := strings.Split(cpu, "\n")
 	var cpuTotal CpuInfo
 	cpus := make([] CpuInfo, 0, numCpus)
 	for index, line := range cpuLines {
@@ -341,6 +341,7 @@ func main() {
 
 	metricsResult := &MetricsResult{
 		Id: config.Id,
+		CustomerId: config.CustomerId,
 		Time: unixTime,
 		Cpu: CpuResult{
 			Speed: cpuSpeed,
