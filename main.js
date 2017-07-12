@@ -154,7 +154,7 @@ Promise.all(promises).then(values => {
 
   const s3 = _initializeS3(config, argv);
 
-  const key = `${config.customerId}/${out.Id}/${config.customerId}_${out.Id}_${time}.gz`;
+  const key = `${config.customerId}/${out.Id}/${config.customerId}_${out.Id}_${time}.json.gz`;
   s3.upload({
     Bucket: config.bucket,
     Key: key,
