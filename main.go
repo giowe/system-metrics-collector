@@ -360,7 +360,7 @@ func main() {
 
 	sess := session.Must(session.NewSession(awsConfig))
 
-	key := config.CustomerId + "/" + config.Id + "/" + config.CustomerId + "_" + config.Id + "_" + strconv.Itoa(int(unixTime)) + ".gz"
+	key := config.CustomerId + "/" + config.Id + "/" + config.CustomerId + "_" + config.Id + "_" + strconv.Itoa(int(unixTime)) + ".json.gz"
 
 	uploader := s3manager.NewUploader(sess)
 
