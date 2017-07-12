@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"flag"
 	"fmt"
+	"compress/gzip"
 	"compress/zlib"
 )
 
@@ -110,7 +111,7 @@ func getConfig() (config Config) {
 
 	homeDir := usr.HomeDir
 
-	file, err := os.Open(path.Join(homeDir, ".smc"))
+	file, err := os.Open(path.Join(homeDir, ".smcrc"))
 	check(err)
 	defer file.Close()
 
@@ -360,13 +361,14 @@ func main() {
 
 	sess := session.Must(session.NewSession(awsConfig))
 
-	key := config.CustomerId + "/" + config.Id + "/" + config.CustomerId + "_" + config.Id + "_" + strconv.Itoa(int(unixTime))
+	key := config.CustomerId + "/" + config.Id + "/" + config.CustomerId + "_" + config.Id + "_" + strconv.Itoa(int(unixTime)) + ".gz"
 
 	uploader := s3manager.NewUploader(sess)
 
 	var b bytes.Buffer
-	w := zlib.NewWriter(&b)
-	w.Write([]byte(string(s3Json)))
+	w := gzip.NewWriter(&b)
+	_,err = w.Write([]byte(string(s3Json)))
+	check(err)
 	w.Close()
 
 	var res = new(s3manager.UploadOutput)
