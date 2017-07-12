@@ -136,20 +136,21 @@ Promise.all(promises).then(values => {
     });
   });
 
+  const Memory = {
+    MemTotal: parseInt(_findSingleValueFromText(ram, 'MemTotal', ':').slice(0, -2)),
+    MemFree: parseInt(_findSingleValueFromText(ram, 'MemFree', ':').slice(0, -2))
+  };
+
+  Memory.MemAvailable =  Memory.MemFree + parseInt(_findSingleValueFromText(ram, 'Cached', ':').slice(0, -2)) + parseInt(_findSingleValueFromText(ram, 'Buffers', ':').slice(0, -2));
+
   const out = {
     Id: argv.id || config.id,
     Time: time,
     Cpu: cpuResult,
-    Memory: {
-      MemTotal: parseInt(_findSingleValueFromText(ram, 'MemTotal', ':').slice(0, -2)),
-      MemFree: parseInt(_findSingleValueFromText(ram, 'MemFree', ':').slice(0, -2)),
-      MemAvailable: parseInt(_findSingleValueFromText(ram, 'MemAvailable', ':').slice(0, -2))
-    },
+    Memory,
     Disks: diskResult,
     Network: netResult
   };
-
-  //console.log(JSON.stringify(out));
 
   const s3 = _initializeS3(config, argv);
 
