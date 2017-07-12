@@ -260,7 +260,7 @@ func main() {
 
 		rows := strings.Fields(line)
 
-		if len(rows) <= 10 {
+		if len(rows) < 8 {
 			continue
 		}
 
@@ -273,9 +273,12 @@ func main() {
 			Iowait:    parseInt(rows[5]),
 			Irq:       parseInt(rows[6]),
 			Softirq:   parseInt(rows[7]),
-			Steal:     parseInt(rows[8]),
-			Guest:     parseInt(rows[9]),
-			GuestNice: parseInt(rows[10]),
+		}
+
+		if len(rows) > 8 {
+			cpuInfo.Steal = parseInt(rows[8])
+			cpuInfo.Guest = parseInt(rows[9])
+			cpuInfo.GuestNice = parseInt(rows[10])
 		}
 
 		if index == 0 {
