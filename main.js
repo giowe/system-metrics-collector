@@ -8,7 +8,7 @@ const { readFile } = require('fs');
 const AWS = require('aws-sdk');
 const config = {};
 const zlib = require('zlib');
-const configFileName = path.join(process.env.HOME, '.smc');
+const configFileName = path.join(process.env.HOME, '.smcrc');
 const lastDataFileName = path.join(process.env.HOME, '.smclastdata');
 
 let lastKey = null;
@@ -19,7 +19,7 @@ try {
 try {
   Object.assign(config, JSON.parse(fs.readFileSync(configFileName, 'UTF-8')));
 } catch(ignore) {
-  console.log(`Can't find config file at ${path.join(process.env.HOME, '.smc')}`);
+  console.log(`Can't find config file at ${configFileName}`);
 }
 
 if(argv.customerId) config.customerId = argv.customerId;
@@ -154,12 +154,12 @@ Promise.all(promises).then(values => {
 
   const s3 = _initializeS3(config, argv);
 
-  const key = `${config.customerId}/${out.Id}/${config.customerId}_${out.Id}_${time}`;
+  const key = `${config.customerId}/${out.Id}/${config.customerId}_${out.Id}_${time}.gz`;
   s3.upload({
     Bucket: config.bucket,
     Key: key,
     ContentType: 'application/json',
-    Body: zlib.deflateSync(JSON.stringify(out)),
+    Body: zlib.gzipSync(JSON.stringify(out)),
     Metadata: lastKey ? {
       PreviousKey: lastKey
     } : null
