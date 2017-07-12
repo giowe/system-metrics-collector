@@ -121,19 +121,19 @@ Promise.all(promises).then(values => {
 
   });
 
-  const netResult = [];
+  const netResult = {};
 
   net.forEach((line, index) => {
     if(index < 2) return;
     const split = line.trim().split(/\s+/);
     if(split.length < 11) return;
-    netResult.push({
+    netResult[split[0].substring(0, split[0].length-1)] = {
       Name: split[0].substring(0, split[0].length-1),
       BytesIn: parseInt(split[1]),
       PacketsIn: parseInt(split[2]),
       BytesOut: parseInt(split[9]),
       PacketsOut: parseInt(split[10])
-    });
+    };
   });
 
   const Memory = {
