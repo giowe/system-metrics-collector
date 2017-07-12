@@ -22,7 +22,8 @@ You need to install Go first.
 Please follow this [instructions](https://golang.org/doc/install).
 Then you can write this command to build this tool:
 ```shell
-go build -o build/smc src/main/main.go
+go get
+go build -o build/smc main.go
 ```
 ##### 2. Node
 ```shell
