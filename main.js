@@ -145,6 +145,7 @@ Promise.all(promises).then(values => {
 
   const out = {
     Id: argv.id || config.id,
+    CustomerId: argv.customerId || config.customerId,
     Time: time,
     Cpu: cpuResult,
     Memory,
