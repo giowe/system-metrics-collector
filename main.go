@@ -81,11 +81,12 @@ type NetworkResult struct {
 
 type MetricsResult struct {
 	Id string
+
 	Time int64
 	Cpu      CpuResult
 	Memory      RamResult
 	Disks    []DiskResult
-	Network []NetworkResult
+	Network *map[string]NetworkResult
 }
 
 func check(err error) {
@@ -117,6 +118,24 @@ func getConfig() (config Config) {
 	config.Id = *idFlag
 	config.CustomerId = *customerIdFlag
 	return
+}
+
+func getLastKey() ([]byte, error) {
+	usr, err := user.Current()
+	check(err)
+	homeDir := usr.HomeDir
+
+	dat, err := ioutil.ReadFile(path.Join(homeDir, ".smclastdata"))
+	return dat,err
+}
+
+func writeLastKey(key string) {
+	usr, err := user.Current()
+	check(err)
+	homeDir := usr.HomeDir
+
+	err = ioutil.WriteFile(path.Join(homeDir, ".smclastdata"), []byte(key), 0644)
+	check(err)
 }
 
 func getFile(path string) string {
@@ -239,7 +258,8 @@ func main() {
 		}
 	}
 
-	netResult := make([]NetworkResult, len(net) - 3)
+	var netResult map[string]NetworkResult
+	netResult = make(map[string]NetworkResult)
 	for index, line := range net {
 		if index < 2 {
 			continue
@@ -249,8 +269,9 @@ func main() {
 		if len(rows) <= 10 {
 			continue
 		}
-		netResult[index - 2] = NetworkResult{
-			Name:       SubstringRight(rows[0], 1),
+		netName := SubstringRight(rows[0], 1)
+		netResult[netName] = NetworkResult{
+			Name:       netName,
 			BytesIn:    parseInt(rows[1]),
 			PacketsIn:  parseInt(rows[2]),
 			BytesOut:   parseInt(rows[9]),
@@ -295,7 +316,7 @@ func main() {
 			MemFree:memFree,
 			MemTotal:memTotal,
 		},
-		Network: netResult,
+		Network: &netResult,
 		Disks: disksResult,
 	}
 
@@ -323,13 +344,26 @@ func main() {
 	w.Close()
 
 	var res = new(s3manager.UploadOutput)
+
+	var metadata map[string]*string
+	metadata = make(map[string]*string)
+	lastKeyBArr,err := getLastKey()
+	if err == nil {
+		lastKey := string(lastKeyBArr)
+		metadata["PreviousKey"] = &lastKey
+	}
+
 	res,err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: &config.Bucket,
 
 		Key: &key,
 
 		Body: bytes.NewReader(b.Bytes()),
+
+		Metadata: metadata,
 	})
+
+	writeLastKey(key)
 
 	check(err)
 	fmt.Println("Metric uploaded to " + res.Location)
