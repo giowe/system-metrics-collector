@@ -107,25 +107,25 @@ func check(err error) {
 func getConfig() (config Config) {
 	usr, err := user.Current()
 	check(err)
-
 	homeDir := usr.HomeDir
 
-	file, err := os.Open(path.Join(homeDir, ".smcrc"))
+	bucket := flag.String("bucket", config.Bucket, "Sets the bucket name")
+	idFlag := flag.String("id", config.Id, "Sets an unique id which identify your device.")
+	customerIdFlag := flag.String("customer", config.CustomerId, "Sets the customer id. It will be used to identify each customer.")
+	configPath := flag.String("configPath", path.Join(homeDir, ".smcrc"), "Sets the config path")
+	flag.Parse()
+
+	config.Bucket = *bucket
+	config.Id = *idFlag
+	config.CustomerId = *customerIdFlag
+
+	file, err := os.Open(*configPath)
 	check(err)
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&config)
 	check(err)
-
-	bucket := flag.String("bucket", config.Bucket, "Sets the bucket name")
-	idFlag := flag.String("id", config.Id, "Sets an unique id which identify your device.")
-	customerIdFlag := flag.String("customer", config.CustomerId, "Sets the customer id. It will be used to identify each customer.")
-	flag.Parse()
-
-	config.Bucket = *bucket
-	config.Id = *idFlag
-	config.CustomerId = *customerIdFlag
 	return
 }
 
@@ -232,20 +232,20 @@ func main() {
 	cpuSpeed := convertStringArrayToFloat(findMultipleValuesFromText(cpuInfo, "cpu MHz", ':'))
 	numCpus := len(cpuSpeed)
 
-	memFreeRaw,error := findSingleValueFromText(ram, "MemFree", ':')
-	check(error)
+	memFreeRaw,err := findSingleValueFromText(ram, "MemFree", ':')
+	check(err)
 	memFree := parseInt(SubstringRight(memFreeRaw, 3))
 
-	memTotalRaw,error := findSingleValueFromText(ram, "MemTotal", ':')
-	check(error)
+	memTotalRaw,err := findSingleValueFromText(ram, "MemTotal", ':')
+	check(err)
 	memTotal := parseInt(SubstringRight(memTotalRaw, 3))
 
-	cachedRaw,error := findSingleValueFromText(ram, "Cached", ':')
-	check(error)
+	cachedRaw,err := findSingleValueFromText(ram, "Cached", ':')
+	check(err)
 	Cached := parseInt(SubstringRight(cachedRaw, 3))
 
-	buffersRaw,error := findSingleValueFromText(ram, "Buffers", ':')
-	check(error)
+	buffersRaw,err := findSingleValueFromText(ram, "Buffers", ':')
+	check(err)
 	Buffers := parseInt(SubstringRight(buffersRaw, 3))
 	memAvailable := memFree + Cached + Buffers
 
