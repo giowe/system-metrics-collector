@@ -40,7 +40,8 @@ Otherwise you can run this tool with several flags (flags overcome config values
    - ```--bucket``` Sets s3 bucket name.
    - ```--id``` Sets an unique id which identify your device.
    - ```--customerId``` Sets the customer id. It will be used to identify your customers.
-
+   - ```--configPath``` Sets the config path.
+   
 ### How to run it
 ##### 1. Go
 Go builds the executable file named 'smc' into 'build' directory.

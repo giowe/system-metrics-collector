@@ -296,7 +296,7 @@ func main() {
 			continue
 		}
 		netName := SubstringRight(rows[0], 1)
-		netResult[netName] = NetworkResult{
+		netResult[netName] = NetworkResult {
 			Name:       netName,
 			BytesIn:    parseInt(rows[1]),
 			PacketsIn:  parseInt(rows[2]),
