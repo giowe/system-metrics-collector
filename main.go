@@ -20,7 +20,6 @@ import (
 	"flag"
 	"fmt"
 	"compress/gzip"
-	"compress/zlib"
 )
 
 type Config struct {
