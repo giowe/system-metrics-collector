@@ -89,6 +89,15 @@ type MetricsResult struct {
 	Network *map[string]NetworkResult
 }
 
+type CustomError struct {
+	error string
+}
+
+func (cError CustomError) Error() string {
+	return cError.error
+}
+
+
 func check(err error) {
 	if err != nil {
 		log.Fatal(err)
@@ -120,13 +129,18 @@ func getConfig() (config Config) {
 	return
 }
 
-func getLastKey() ([]byte, error) {
+func getLastKey() (*string, error) {
 	usr, err := user.Current()
 	check(err)
 	homeDir := usr.HomeDir
 
 	dat, err := ioutil.ReadFile(path.Join(homeDir, ".smclastdata"))
-	return dat,err
+	if(err != nil) {
+		return nil,err
+	} else {
+		result := string(dat)
+		return &result,err
+	}
 }
 
 func writeLastKey(key string) {
@@ -158,11 +172,11 @@ func findMultipleValuesFromText(text string, key string, separator byte) []strin
 	check(err)
 	indexes := r.FindAllStringIndex(text, -1)
 	if indexes == nil {
-		return nil
+		return []string{}
 	}
 	textLen := len(text)
-	results := make([]string, len(indexes))
-	for i, index := range indexes {
+	results := make([]string, 0, len(indexes))
+	for _,index := range indexes {
 		startIndex := index[1]
 		endIndex := index[1]
 		for textLen > endIndex && text[endIndex] != '\n' {
@@ -171,24 +185,26 @@ func findMultipleValuesFromText(text string, key string, separator byte) []strin
 			}
 			endIndex++
 		}
-		results[i] = strings.TrimSpace(text[startIndex:endIndex])
+		results = append(results, strings.TrimSpace(text[startIndex:endIndex]))
 	}
 	return results
 }
 
-func findSingleValueFromText(text string, key string, separator byte) string {
+func findSingleValueFromText(text string, key string, separator byte) (string,error) {
 	result := findMultipleValuesFromText(text, key, separator)
 	if result == nil || len(result) < 1 {
-		return ""
+		return "",CustomError {error: "Unable to find a value with key " + key + ". findSingleValueFromText func"}
 	} else {
-		return result[0]
+		return result[0],nil
 	}
 }
 
 func convertStringArrayToFloat(array []string) []float64{
-	results := make([]float64, len(array))
-	for index, stringa := range array {
-		results[index],_ = strconv.ParseFloat(stringa, 64)
+	results := make([]float64, 0, len(array))
+	for _, stringa := range array {
+		value,err := strconv.ParseFloat(stringa, 64)
+		check(err)
+		results = append(results, value)
 	}
 	return results
 }
@@ -216,15 +232,26 @@ func main() {
 	cpuSpeed := convertStringArrayToFloat(findMultipleValuesFromText(cpuInfo, "cpu MHz", ':'))
 	numCpus := len(cpuSpeed)
 
-	memFree := parseInt(SubstringRight(findSingleValueFromText(ram, "MemFree", ':'), 3))
-	memTotal := parseInt(SubstringRight(findSingleValueFromText(ram, "MemTotal", ':'), 3))
-	Cached := parseInt(SubstringRight(findSingleValueFromText(ram, "Cached", ':'), 3))
-	Buffers := parseInt(SubstringRight(findSingleValueFromText(ram, "Buffers", ':'), 3))
+	memFreeRaw,error := findSingleValueFromText(ram, "MemFree", ':')
+	check(error)
+	memFree := parseInt(SubstringRight(memFreeRaw, 3))
+
+	memTotalRaw,error := findSingleValueFromText(ram, "MemTotal", ':')
+	check(error)
+	memTotal := parseInt(SubstringRight(memTotalRaw, 3))
+
+	cachedRaw,error := findSingleValueFromText(ram, "Cached", ':')
+	check(error)
+	Cached := parseInt(SubstringRight(cachedRaw, 3))
+
+	buffersRaw,error := findSingleValueFromText(ram, "Buffers", ':')
+	check(error)
+	Buffers := parseInt(SubstringRight(buffersRaw, 3))
 	memAvailable := memFree + Cached + Buffers
 
 	cpuLines := strings.SplitN(cpu, "\n", -1 )
 	var cpuTotal CpuInfo
-	cpus := make([] CpuInfo, numCpus)
+	cpus := make([] CpuInfo, 0, numCpus)
 	for index, line := range cpuLines {
 		line = strings.TrimSpace(line)
 		if !strings.HasPrefix(line, "cpu") {
@@ -254,12 +281,11 @@ func main() {
 		if index == 0 {
 			cpuTotal = cpuInfo
 		} else {
-			cpus[index-1] = cpuInfo
+			cpus = append(cpus, cpuInfo)
 		}
 	}
 
-	var netResult map[string]NetworkResult
-	netResult = make(map[string]NetworkResult)
+	netResult := make(map[string]NetworkResult)
 	for index, line := range net {
 		if index < 2 {
 			continue
@@ -279,7 +305,7 @@ func main() {
 		}
 	}
 
-	disksResult := make([]DiskResult, len(disk) - 2)
+	disksResult := make([]DiskResult, 0, len(disk) - 2)
 
 	for index, line := range disk {
 		if index == 0 {
@@ -293,13 +319,13 @@ func main() {
 			continue
 		}
 
-		disksResult[index - 1] = DiskResult{
+		disksResult = append(disksResult, DiskResult{
 			Name: rows[0],
 			MountPoint: rows[5],
 			Capacity: parseInt(SubstringRight(rows[4], 1)),
 			Used: parseInt(rows[2]),
 			Available: parseInt(rows[3]),
-		}
+		})
 	}
 
 	metricsResult := &MetricsResult{
@@ -345,12 +371,10 @@ func main() {
 
 	var res = new(s3manager.UploadOutput)
 
-	var metadata map[string]*string
-	metadata = make(map[string]*string)
-	lastKeyBArr,err := getLastKey()
+	metadata := make(map[string]*string)
+	lastKey,err := getLastKey()
 	if err == nil {
-		lastKey := string(lastKeyBArr)
-		metadata["PreviousKey"] = &lastKey
+		metadata["PreviousKey"] = lastKey
 	}
 
 	res,err = uploader.Upload(&s3manager.UploadInput{
