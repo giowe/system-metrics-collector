@@ -249,7 +249,7 @@ func main() {
 	Buffers := parseInt(SubstringRight(buffersRaw, 3))
 	memAvailable := memFree + Cached + Buffers
 
-	cpuLines := strings.SplitN(cpu, "\n", -1 )
+	cpuLines := strings.SplitN(cpu, "\n", -1)
 	var cpuTotal CpuInfo
 	cpus := make([] CpuInfo, 0, numCpus)
 	for index, line := range cpuLines {
@@ -290,18 +290,26 @@ func main() {
 		if index < 2 {
 			continue
 		}
-		line = strings.TrimSpace(line)
-		rows := strings.Fields(line)
-		if len(rows) <= 10 {
+
+		split := strings.Split(line, ":")
+		if len(split) < 2 {
 			continue
 		}
-		netName := SubstringRight(rows[0], 1)
+
+		netName := strings.TrimSpace(split[0])
+		values := strings.TrimSpace(line[len(split[0])+1:])
+
+		rows := strings.Fields(values)
+		if len(rows) <= 9 {
+			continue
+		}
+
 		netResult[netName] = NetworkResult {
 			Name:       netName,
-			BytesIn:    parseInt(rows[1]),
-			PacketsIn:  parseInt(rows[2]),
-			BytesOut:   parseInt(rows[9]),
-			PacketsOut: parseInt(rows[10]),
+			BytesIn:    parseInt(rows[0]),
+			PacketsIn:  parseInt(rows[1]),
+			BytesOut:   parseInt(rows[8]),
+			PacketsOut: parseInt(rows[9]),
 		}
 	}
 
