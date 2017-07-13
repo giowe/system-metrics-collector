@@ -36,7 +36,7 @@ This file is structured like this
   }
 }
 ```
-You can generate the default config by running
+You can generate the default config running
 ```shell
 ./smc generateConfig [fullpath]
 ```
@@ -46,8 +46,8 @@ Otherwise you can run this tool with several flags (flags overcome config values
    - ```--bucket``` Sets s3 bucket name.
    - ```--id``` Sets an unique id which identify your device.
    - ```--customerId``` Sets the customer id. It will be used to identify your customers.
-   - ```--configPath``` Sets the config path.
-   
+   - ```--configPath``` Sets the config path (It includes file name).
+   - ```--lastDataPath``` Sets last data Path (It includes file name).
 ### How to run it
 ##### 1. Go
 Go builds the executable file named 'smc' into 'build' directory.
