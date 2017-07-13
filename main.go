@@ -317,7 +317,7 @@ func main() {
 		}
 
 		if len(rows) > 10 {
-			cpuInfo.Guest = parseInt(rows[10])
+			cpuInfo.GuestNice = parseInt(rows[10])
 		}
 
 		if index == 0 {
