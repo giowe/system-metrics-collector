@@ -39,7 +39,7 @@ This file is structured like this
   "id": "customer-pc-1",
   "customerId": "customer name",
   "bucket": "bucket name",
-  "cloudWatchEnabledStats": ["MemoryUtilization","CpuUtilization"],
+  "cloudWatchEnabledStats": ["MemoryUtilization","CPUUtilization"],
   "aws": {
     "accessKeyId": "",
     "secretAccessKey": "",
