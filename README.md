@@ -28,6 +28,7 @@ This file is structured like this
   "id": "customer-pc-1",
   "customerId": "customer name",
   "bucket": "bucket name",
+  "cloudWatchEnabledStats": ["",""],
   "aws": {
     "accessKeyId": "",
     "secretAccessKey": "",
@@ -35,6 +36,11 @@ This file is structured like this
   }
 }
 ```
+You can generate the default config by running
+```shell
+./smc generateConfig [fullpath]
+```
+The full path also includes the file name. Example: /home/ec2-user/.smcrc
 ### Flags
 Otherwise you can run this tool with several flags (flags overcome config values)
    - ```--bucket``` Sets s3 bucket name.

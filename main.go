@@ -23,11 +23,12 @@ import (
 )
 
 type Config struct {
-	Id string         `json:"id"`
-	CustomerId string `json:"customerId"`
-	Bucket  string `json:"bucket"`
-	AwsCredentials AwsCredentials `json:"aws"`
-	LastDataPath string `json:"lastDataPath"`
+	Id                       string         `json:"id"`
+	CustomerId               string `json:"customerId"`
+	Bucket                   string `json:"bucket"`
+	AwsCredentials           AwsCredentials `json:"aws"`
+	lastDataPath             string
+	CloudWatchEnabledMetrics []string `json:"cloudWatchEnabledStats"`
 }
 
 type AwsCredentials struct {
@@ -140,8 +141,8 @@ func getConfig() (config Config) {
 	check(err)
 
 	//override config value with flag values
-	config.LastDataPath = *lastDataPath
-	if config.LastDataPath == "" {
+	config.lastDataPath = *lastDataPath
+	if config.lastDataPath == "" {
 		log.Fatal("Please add the argument --lastDataPath")
 	}
 
@@ -163,7 +164,7 @@ func getConfig() (config Config) {
 }
 
 func getLastKey(config Config) (*string, error) {
-	dat, err := ioutil.ReadFile(config.LastDataPath)
+	dat, err := ioutil.ReadFile(config.lastDataPath)
 	if(err != nil) {
 		return nil,err
 	} else {
@@ -173,7 +174,7 @@ func getLastKey(config Config) (*string, error) {
 }
 
 func writeLastKey(key string, config Config) {
-	err := ioutil.WriteFile(config.LastDataPath, []byte(key), 0644)
+	err := ioutil.WriteFile(config.lastDataPath, []byte(key), 0644)
 	check(err)
 }
 
@@ -234,6 +235,35 @@ func convertStringArrayToFloat(array []string) []float64{
 	return results
 }
 
+func generateDefaultConfigFile() {
+	defaultConfig := Config{
+		Id: "id",
+		CustomerId: "customer id",
+		Bucket: "aws-bucket",
+		CloudWatchEnabledMetrics: []string{"CpuUtilization", "MemoryUtilization"},
+		AwsCredentials: AwsCredentials{
+			AccessKeyID: "aws access key id",
+			SecretAccessKey: "secret access key",
+		},
+	}
+
+	s3Json, err := json.Marshal(defaultConfig)
+	check(err)
+
+	var configDir string
+	if(len(os.Args) > 2) {
+		configDir = os.Args[2]
+	} else {
+		usr, err := user.Current()
+		if err == nil {
+			configDir = path.Join(usr.HomeDir, ".smcrc")
+		}
+	}
+
+	err = ioutil.WriteFile(configDir, []byte(string(s3Json)), 0644)
+	check(err)
+}
+
 func parseInt(stringa string) int {
 	result,err := strconv.Atoi(stringa)
 	check(err)
@@ -245,6 +275,11 @@ func SubstringRight(stringa string, amount int) string {
 }
 
 func main() {
+	if(len(os.Args) > 1 && strings.ToLower(os.Args[1]) == "generateconfig") {
+		generateDefaultConfigFile()
+		return
+	}
+
 	config := getConfig()
 
 	net := strings.Split(getFile("/proc/net/dev"), "\n")
@@ -431,6 +466,15 @@ func main() {
 		metadata["PreviousKey"] = lastKey
 	}
 
+	if len(config.CloudWatchEnabledMetrics) > 0 {
+		buildedJsonArray := "["
+		for _, metric := range config.CloudWatchEnabledMetrics {
+			buildedJsonArray += "\"" + metric + "\","
+		}
+		buildedJsonArray = buildedJsonArray[0:len(buildedJsonArray)-1] + "]"
+		metadata["CloudWatchEnabledMetrics"] = &buildedJsonArray
+	}
+
 	res,err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: &config.Bucket,
 
@@ -441,8 +485,9 @@ func main() {
 		Metadata: metadata,
 	})
 
-	writeLastKey(key, config)
-
 	check(err)
+
 	fmt.Println("Metric uploaded to " + res.Location)
+
+	writeLastKey(key, config)
 }
