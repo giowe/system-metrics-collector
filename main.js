@@ -136,14 +136,11 @@ Promise.all(promises).then(values => {
     };
   });
 
-  const swapFree = parseInt(_findSingleValueFromText(ram, 'SwapFree', ':').slice(0, -2));
-  const swapTotal = parseInt(_findSingleValueFromText(ram, 'SwapTotal', ':').slice(0, -2));
-
   const Memory = {
     MemTotal: parseInt(_findSingleValueFromText(ram, 'MemTotal', ':').slice(0, -2)),
     MemFree: parseInt(_findSingleValueFromText(ram, 'MemFree', ':').slice(0, -2)),
-    SwapUtilization: 100*swapFree/swapTotal,
-    SwapUsed: swapTotal-swapFree
+    SwapTotal: parseInt(_findSingleValueFromText(ram, 'SwapTotal', ':').slice(0, -2)),
+    SwapFree: parseInt(_findSingleValueFromText(ram, 'SwapFree', ':').slice(0, -2))
   };
 
   Memory.MemAvailable =  Memory.MemFree + parseInt(_findSingleValueFromText(ram, 'Cached', ':').slice(0, -2)) + parseInt(_findSingleValueFromText(ram, 'Buffers', ':').slice(0, -2));
