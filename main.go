@@ -61,6 +61,8 @@ type RamResult struct {
 	MemTotal int
 	MemFree int
 	MemAvailable int
+	SwapFree int
+	SwapTotal int
 }
 
 type DiskResult struct {
@@ -249,6 +251,14 @@ func main() {
 	Buffers := parseInt(SubstringRight(buffersRaw, 3))
 	memAvailable := memFree + Cached + Buffers
 
+	swapFreeRaw,err := findSingleValueFromText(ram, "SwapFree", ':')
+	check(err)
+	swapFree := parseInt(SubstringRight(swapFreeRaw, 3))
+
+	swapTotalRaw,err := findSingleValueFromText(ram, "SwapTotal", ':')
+	check(err)
+	swapTotal := parseInt(SubstringRight(swapTotalRaw, 3))
+
 	cpuLines := strings.Split(cpu, "\n")
 	var cpuTotal CpuInfo
 	cpus := make([] CpuInfo, 0, numCpus)
@@ -353,6 +363,8 @@ func main() {
 			MemAvailable:memAvailable,
 			MemFree:memFree,
 			MemTotal:memTotal,
+			SwapFree: swapFree,
+			SwapTotal: swapTotal,
 		},
 		Network: &netResult,
 		Disks: disksResult,
