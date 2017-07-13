@@ -8,8 +8,8 @@ const { readFile } = require('fs');
 const AWS = require('aws-sdk');
 const config = {};
 const zlib = require('zlib');
-const configFileName = path.join(process.env.HOME, '.smcrc');
-const lastDataFileName = path.join(process.env.HOME, '.smclastdata');
+const configFileName = argv.configPath ? argv.configPath : path.join(process.env.HOME, '.smcrc');
+const lastDataFileName = argv.lastDataPath ? argv.lastDataPath : path.join(process.env.HOME, '.smclastdata');
 
 let lastKey = null;
 try {
@@ -91,10 +91,10 @@ Promise.all(promises).then(values => {
       Idle: parseInt(idle),
       Iowait: parseInt(iowait),
       Irq: parseInt(irq),
-      Softirq: parseInt(softirq),
-      Steal: parseInt(steal),
-      Guest: parseInt(guest),
-      GuestNice: parseInt(guest_nice)
+      Softirq: softirq ? parseInt(softirq) : 0,
+      Steal: steal ? parseInt(steal) : 0,
+      Guest: guest ? parseInt(guest) : 0,
+      GuestNice: guest_nice ? parseInt(guest_nice) : 0
     };
 
     if(index === 0) {
@@ -158,14 +158,18 @@ Promise.all(promises).then(values => {
   const s3 = _initializeS3(config, argv);
 
   const key = `${config.customerId}/${out.Id}/${config.customerId}_${out.Id}_${time}.json.gz`;
+
+  const metadata = { CloudWatchEnabledMetrics: config.cloudWatchEnabledMetrics };
+  if(lastKey) {
+    metadata.PreviousKey = lastKey;
+  }
+
   s3.upload({
     Bucket: config.bucket,
     Key: key,
     ContentType: 'application/json',
     Body: zlib.gzipSync(JSON.stringify(out)),
-    Metadata: lastKey ? {
-      PreviousKey: lastKey
-    } : null
+    Metadata: metadata
   }, (err, result) => {
     if(err) return console.log(err);
     console.log(result);
