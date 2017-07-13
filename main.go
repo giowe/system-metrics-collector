@@ -27,6 +27,7 @@ type Config struct {
 	CustomerId string `json:"customerId"`
 	Bucket  string `json:"bucket"`
 	AwsCredentials AwsCredentials `json:"aws"`
+	LastDataPath string `json:"lastDataPath"`
 }
 
 type AwsCredentials struct {
@@ -108,18 +109,27 @@ func check(err error) {
 
 func getConfig() (config Config) {
 	usr, err := user.Current()
-	check(err)
-	homeDir := usr.HomeDir
+	var homeDir string
+	if err == nil {
+		homeDir = path.Join(usr.HomeDir, ".smcrc")
+	}
 
-	bucket := flag.String("bucket", config.Bucket, "Sets the bucket name")
-	idFlag := flag.String("id", config.Id, "Sets an unique id which identify your device.")
-	customerIdFlag := flag.String("customer", config.CustomerId, "Sets the customer id. It will be used to identify each customer.")
-	configPath := flag.String("configPath", path.Join(homeDir, ".smcrc"), "Sets the config path")
+	var lastDataDir string
+	if err == nil {
+		lastDataDir = path.Join(usr.HomeDir, ".smclastdata")
+	}
+
+	configPath := flag.String("configPath", homeDir, "Sets the config path")
+	lastDataPath := flag.String("lastDataPath", lastDataDir, "Sets the last data path")
+	config.LastDataPath = *lastDataPath
 	flag.Parse()
 
-	config.Bucket = *bucket
-	config.Id = *idFlag
-	config.CustomerId = *customerIdFlag
+	if *configPath == "" {
+		log.Fatal("Please add the argument --configPath")
+	}
+	if config.LastDataPath == "" {
+		log.Fatal("Please add the argument --lastDataPath")
+	}
 
 	file, err := os.Open(*configPath)
 	check(err)
@@ -128,15 +138,22 @@ func getConfig() (config Config) {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&config)
 	check(err)
+
+	bucket := flag.String("bucket", config.Bucket, "Sets the bucket name")
+	idFlag := flag.String("id", config.Id, "Sets an unique id which identify your device.")
+	customerIdFlag := flag.String("customer", config.CustomerId, "Sets the customer id. It will be used to identify each customer.")
+	//flag.Parse()
+
+	//override config value with flag values
+
+	config.Bucket = *bucket
+	config.Id = *idFlag
+	config.CustomerId = *customerIdFlag
 	return
 }
 
-func getLastKey() (*string, error) {
-	usr, err := user.Current()
-	check(err)
-	homeDir := usr.HomeDir
-
-	dat, err := ioutil.ReadFile(path.Join(homeDir, ".smclastdata"))
+func getLastKey(config Config) (*string, error) {
+	dat, err := ioutil.ReadFile(config.LastDataPath)
 	if(err != nil) {
 		return nil,err
 	} else {
@@ -145,12 +162,8 @@ func getLastKey() (*string, error) {
 	}
 }
 
-func writeLastKey(key string) {
-	usr, err := user.Current()
-	check(err)
-	homeDir := usr.HomeDir
-
-	err = ioutil.WriteFile(path.Join(homeDir, ".smclastdata"), []byte(key), 0644)
+func writeLastKey(key string, config Config) {
+	err := ioutil.WriteFile(config.LastDataPath, []byte(key), 0644)
 	check(err)
 }
 
@@ -397,7 +410,7 @@ func main() {
 	var res = new(s3manager.UploadOutput)
 
 	metadata := make(map[string]*string)
-	lastKey,err := getLastKey()
+	lastKey,err := getLastKey(config)
 	if err == nil {
 		metadata["PreviousKey"] = lastKey
 	}
@@ -412,7 +425,7 @@ func main() {
 		Metadata: metadata,
 	})
 
-	writeLastKey(key)
+	writeLastKey(key, config)
 
 	check(err)
 	fmt.Println("Metric uploaded to " + res.Location)
