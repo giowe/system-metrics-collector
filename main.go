@@ -121,14 +121,14 @@ func getConfig() (config Config) {
 
 	configPath := flag.String("configPath", homeDir, "Sets the config path")
 	lastDataPath := flag.String("lastDataPath", lastDataDir, "Sets the last data path")
-	config.LastDataPath = *lastDataPath
+
+	bucket := flag.String("bucket", "", "Sets the bucket name")
+	idFlag := flag.String("id", "", "Sets an unique id which identify your device.")
+	customerIdFlag := flag.String("customer", "", "Sets the customer id. It will be used to identify each customer.")
 	flag.Parse()
 
 	if *configPath == "" {
 		log.Fatal("Please add the argument --configPath")
-	}
-	if config.LastDataPath == "" {
-		log.Fatal("Please add the argument --lastDataPath")
 	}
 
 	file, err := os.Open(*configPath)
@@ -139,16 +139,26 @@ func getConfig() (config Config) {
 	err = decoder.Decode(&config)
 	check(err)
 
-	bucket := flag.String("bucket", config.Bucket, "Sets the bucket name")
-	idFlag := flag.String("id", config.Id, "Sets an unique id which identify your device.")
-	customerIdFlag := flag.String("customer", config.CustomerId, "Sets the customer id. It will be used to identify each customer.")
-	//flag.Parse()
-
 	//override config value with flag values
+	config.LastDataPath = *lastDataPath
+	if config.LastDataPath == "" {
+		log.Fatal("Please add the argument --lastDataPath")
+	}
 
-	config.Bucket = *bucket
-	config.Id = *idFlag
-	config.CustomerId = *customerIdFlag
+	bucketParsed := *bucket
+	if bucketParsed != "" {
+		config.Bucket = bucketParsed
+	}
+
+	idFlagParsed := *idFlag
+	if idFlagParsed != "" {
+		config.Id = idFlagParsed
+	}
+
+	customerIdFlagParsed := *customerIdFlag
+	if idFlagParsed != "" {
+		config.CustomerId = customerIdFlagParsed
+	}
 	return
 }
 
