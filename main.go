@@ -310,8 +310,14 @@ func main() {
 
 		if len(rows) > 8 {
 			cpuInfo.Steal = parseInt(rows[8])
+		}
+
+		if len(rows) > 9 {
 			cpuInfo.Guest = parseInt(rows[9])
-			cpuInfo.GuestNice = parseInt(rows[10])
+		}
+
+		if len(rows) > 10 {
+			cpuInfo.Guest = parseInt(rows[10])
 		}
 
 		if index == 0 {
